@@ -5,8 +5,8 @@ import { resizeImage } from '../utils/imageUtils';
 interface UserManagementProps {
   users: User[];
   onAddUser: (name: string, avatar: string) => void;
-  onEditUser: (id: number, name: string, avatar: string) => void;
-  onDeleteUser: (id: number) => void;
+  onEditUser: (id: string, name: string, avatar: string) => void;
+  onDeleteUser: (id: string) => void;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -14,7 +14,7 @@ interface UserManagementProps {
 const AVATAR_OPTIONS = ["👨🏻", "👩🏻", "👨🏼", "👩🏼", "🧑🏽", "👱🏻‍♂️", "👴🏻", "👵🏻", "🦁", "🐯", "🐶", "🐱"];
 
 export const UserManagement: React.FC<UserManagementProps> = ({ users, onAddUser, onEditUser, onDeleteUser, isOpen, onClose }) => {
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState(AVATAR_OPTIONS[0]);
   const fileInputRef = useRef<HTMLInputElement>(null);

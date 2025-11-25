@@ -1,13 +1,13 @@
 import type { User, Expense } from '../types';
 
 export interface Debt {
-  from: number;
-  to: number;
+  from: string;
+  to: string;
   amount: number;
 }
 
 export const calculateDebts = (users: User[], expenses: Expense[]): Debt[] => {
-  const balances: Record<number, number> = {};
+  const balances: Record<string, number> = {};
   users.forEach(u => balances[u.id] = 0);
 
   expenses.forEach(exp => {
@@ -23,11 +23,10 @@ export const calculateDebts = (users: User[], expenses: Expense[]): Debt[] => {
     // PERSONAL expenses don't affect debt (assuming payer paid for themselves)
   });
 
-  const debtors: { id: number; amount: number }[] = [];
-  const creditors: { id: number; amount: number }[] = [];
+  const debtors: { id: string; amount: number }[] = [];
+  const creditors: { id: string; amount: number }[] = [];
 
-  Object.entries(balances).forEach(([idStr, amount]) => {
-    const id = parseInt(idStr);
+  Object.entries(balances).forEach(([id, amount]) => {
     // Use a small epsilon for float comparison
     if (amount < -1) debtors.push({ id, amount });
     else if (amount > 1) creditors.push({ id, amount });

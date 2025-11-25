@@ -3,7 +3,7 @@ import type { Expense, User } from '../types';
 
 interface HistoryProps {
   expenses: Expense[];
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
   users: User[];
 }
 

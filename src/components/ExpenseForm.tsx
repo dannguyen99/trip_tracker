@@ -22,7 +22,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, exchangeRate, u
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState<Currency>('VND');
-  const [paidBy, setPaidBy] = useState<number>(users[0]?.id || 0);
+  const [paidBy, setPaidBy] = useState<string>(users[0]?.id || "0");
   const [type, setType] = useState<ExpenseType>('SHARED');
   const [category, setCategory] = useState<Category>('Food');
 
@@ -44,7 +44,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, exchangeRate, u
     }
 
     const newExpense: Expense = {
-      id: Date.now(),
+      id: Date.now().toString(), // Temporary ID, will be replaced by DB
       description,
       amountVND,
       originalAmount: numericAmount,

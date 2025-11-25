@@ -38,7 +38,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ expenses, users }) => {
   };
 
   // Spender Data
-  const spenderTotals: Record<number, number> = {};
+  const spenderTotals: Record<string, number> = {};
   users.forEach(u => spenderTotals[u.id] = 0);
   expenses.forEach(e => {
     spenderTotals[e.payerId] = (spenderTotals[e.payerId] || 0) + e.amountVND;

@@ -1,0 +1,68 @@
+import React from 'react';
+import type { TripData } from '../types';
+
+interface HeaderProps {
+  data: TripData;
+  onOpenSetup: () => void;
+  onReset: () => void;
+  onBack: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onReset, onBack }) => {
+  const totalSpent = data.expenses.reduce((sum, e) => sum + e.amountVND, 0);
+  const remaining = data.totalBudgetVND - totalSpent;
+  const percent = data.totalBudgetVND > 0 ? Math.min((totalSpent / data.totalBudgetVND) * 100, 100) : 0;
+
+  const formatMoney = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount);
+  };
+
+  return (
+    <header className="travel-header text-white pt-8 pb-32 px-6 rounded-b-[3rem] shadow-2xl relative z-0">
+      <div className="max-w-md mx-auto relative">
+
+        {/* Top Nav */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onBack}
+              className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition text-white"
+            >
+              <i className="ph-bold ph-arrow-left text-lg"></i>
+            </button>
+            <div onClick={onOpenSetup} className="cursor-pointer group">
+              <h1 className="text-3xl font-extrabold tracking-tight leading-none">{data.name}</h1>
+              <div className="flex items-center gap-2 text-xs font-medium text-sky-200/80 group-hover:text-white transition">
+                <i className="ph ph-currency-circle-dollar text-lg"></i>
+                <span>1 THB ≈ {Math.round(data.exchangeRate)} VND</span>
+              </div>
+            </div>
+          </div>
+          <button onClick={onReset} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-red-500/80 transition text-white">
+            <i className="ph ph-trash text-lg"></i>
+          </button>
+        </div>
+
+        {/* Main Budget Card */}
+        <div className="text-center relative">
+          <div className="inline-block px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-widest mb-2">
+            Remaining Budget
+          </div>
+          <div className={`text-5xl font-extrabold mb-1 tracking-tight ${remaining < 0 ? 'text-red-300' : 'text-white'}`}>
+            {formatMoney(remaining)}
+          </div>
+          <div className="text-sm opacity-80">Spent: {formatMoney(totalSpent)}</div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mt-6 relative h-2 bg-slate-900/30 rounded-full overflow-hidden backdrop-blur-sm">
+          <div
+            className={`absolute top-0 left-0 h-full transition-all duration-1000 ease-out ${percent > 90 ? 'bg-red-500' : 'bg-sky-400'}`}
+            style={{ width: `${percent}%` }}
+          ></div>
+        </div>
+
+      </div>
+    </header>
+  );
+};

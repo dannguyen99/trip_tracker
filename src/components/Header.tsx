@@ -4,11 +4,12 @@ import type { TripData } from '../types';
 interface HeaderProps {
   data: TripData;
   onOpenSetup: () => void;
+  onManageUsers: () => void;
   onReset: () => void;
   onBack: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onReset, onBack }) => {
+export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onManageUsers, onReset, onBack }) => {
   const totalSpent = data.expenses.reduce((sum, e) => sum + e.amountVND, 0);
   const remaining = data.totalBudgetVND - totalSpent;
   const percent = data.totalBudgetVND > 0 ? Math.min((totalSpent / data.totalBudgetVND) * 100, 100) : 0;
@@ -38,9 +39,14 @@ export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onReset, onBa
               </div>
             </div>
           </div>
-          <button onClick={onReset} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-red-500/80 transition text-white">
-            <i className="ph ph-trash text-lg"></i>
-          </button>
+          <div className="flex gap-2">
+            <button onClick={onManageUsers} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition text-white">
+              <i className="ph ph-users text-lg"></i>
+            </button>
+            <button onClick={onReset} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-red-500/80 transition text-white">
+              <i className="ph ph-trash text-lg"></i>
+            </button>
+          </div>
         </div>
 
         {/* Main Budget Card */}

@@ -221,6 +221,7 @@ function App() {
       <Header
         data={trip}
         onOpenSetup={() => setIsSetupOpen(true)}
+        onManageUsers={() => setIsUserMgmtOpen(true)}
         onReset={() => { }} // Reset not implemented yet
         onBack={() => {
           setTripId(null);

@@ -69,12 +69,23 @@ export const useTrip = (tripId: string | null) => {
 
       if (restaurantsError) throw restaurantsError;
 
+      // 6. Fetch Activities
+      const { data: activitiesData, error: activitiesError } = await supabase
+        .from('activities')
+        .select('*')
+        .eq('trip_id', tripId)
+        .order('start_time', { ascending: true });
+
+      if (activitiesError) throw activitiesError;
+
       if (isMounted.current) {
         setTrip({
           id: tripData.id,
           name: tripData.name,
           totalBudgetVND: tripData.total_budget_vnd,
           exchangeRate: tripData.exchange_rate,
+          startDate: tripData.start_date,
+          endDate: tripData.end_date,
           users: membersData.map((m: any) => ({
             id: m.id,
             name: m.name,
@@ -110,6 +121,7 @@ export const useTrip = (tripId: string | null) => {
             name: r.name,
             url: r.url,
             notes: r.notes,
+            category: r.category,
             isTried: r.is_tried,
             cuisine: r.cuisine,
             priceRange: r.price_range,
@@ -117,6 +129,18 @@ export const useTrip = (tripId: string | null) => {
             location: r.location,
             description: r.description,
             imageUrl: r.image_url
+          })),
+          activities: activitiesData.map((a: any) => ({
+            id: a.id,
+            tripId: a.trip_id,
+            name: a.name,
+            description: a.description,
+            location: a.location,
+            startTime: a.start_time,
+            endTime: a.end_time,
+            type: a.type,
+            status: a.status,
+            notes: a.notes
           }))
         });
       }
@@ -139,6 +163,7 @@ export const useTrip = (tripId: string | null) => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'trips', filter: `id=eq.${tripId}` }, () => fetchTrip(false))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'hotels', filter: `trip_id=eq.${tripId}` }, () => fetchTrip(false))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'restaurants', filter: `trip_id=eq.${tripId}` }, () => fetchTrip(false))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'activities', filter: `trip_id=eq.${tripId}` }, () => fetchTrip(false))
       .subscribe();
 
     return () => {
@@ -199,6 +224,7 @@ export const useTrip = (tripId: string | null) => {
       name: restaurant.name,
       url: restaurant.url,
       notes: restaurant.notes,
+      category: restaurant.category,
       cuisine: restaurant.cuisine,
       price_range: restaurant.priceRange,
       rating: restaurant.rating,
@@ -287,12 +313,57 @@ export const useTrip = (tripId: string | null) => {
     fetchTrip(false);
   };
 
-  const updateTripSettings = async (totalBudgetVND: number, exchangeRate: number) => {
+  const updateTripSettings = async (totalBudgetVND: number, exchangeRate: number, startDate?: string | null, endDate?: string | null) => {
     if (!tripId) return;
-    const { error } = await supabase.from('trips').update({
+    const updates: any = {
       total_budget_vnd: totalBudgetVND,
       exchange_rate: exchangeRate
-    }).eq('id', tripId);
+    };
+    if (startDate !== undefined) updates.start_date = startDate;
+    if (endDate !== undefined) updates.end_date = endDate;
+
+    const { error } = await supabase.from('trips').update(updates).eq('id', tripId);
+    if (error) throw error;
+    fetchTrip(false);
+  };
+
+  // Activity Methods
+  const addActivity = async (activity: any) => {
+    if (!tripId) return;
+    const { error } = await supabase.from('activities').insert({
+      trip_id: tripId,
+      name: activity.name,
+      description: activity.description,
+      location: activity.location,
+      start_time: activity.startTime,
+      end_time: activity.endTime,
+      type: activity.type,
+      status: activity.status,
+      notes: activity.notes
+    });
+    if (error) throw error;
+    fetchTrip(false);
+  };
+
+  const updateActivity = async (id: string, updates: any) => {
+    // Convert camelCase to snake_case for DB
+    const dbUpdates: any = {};
+    if (updates.name) dbUpdates.name = updates.name;
+    if (updates.description) dbUpdates.description = updates.description;
+    if (updates.location) dbUpdates.location = updates.location;
+    if (updates.startTime) dbUpdates.start_time = updates.startTime;
+    if (updates.endTime) dbUpdates.end_time = updates.endTime;
+    if (updates.type) dbUpdates.type = updates.type;
+    if (updates.status) dbUpdates.status = updates.status;
+    if (updates.notes) dbUpdates.notes = updates.notes;
+
+    const { error } = await supabase.from('activities').update(dbUpdates).eq('id', id);
+    if (error) throw error;
+    fetchTrip(false);
+  };
+
+  const deleteActivity = async (id: string) => {
+    const { error } = await supabase.from('activities').delete().eq('id', id);
     if (error) throw error;
     fetchTrip(false);
   };
@@ -312,6 +383,9 @@ export const useTrip = (tripId: string | null) => {
     deleteHotel,
     addRestaurant,
     toggleRestaurantTried,
-    deleteRestaurant
+    deleteRestaurant,
+    addActivity,
+    updateActivity,
+    deleteActivity
   };
 };

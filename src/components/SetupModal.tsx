@@ -1,23 +1,29 @@
 import React, { useState, useEffect } from 'react';
 
-interface SetupModalProps {
+export interface SetupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (vnd: number, thb: number) => void;
+  onSave: (vnd: number, thb: number, startDate: string, endDate: string) => void;
   initialVND: number;
   initialTHB: number;
+  initialStartDate?: string | null;
+  initialEndDate?: string | null;
 }
 
-export const SetupModal: React.FC<SetupModalProps> = ({ isOpen, onClose, onSave, initialVND, initialTHB }) => {
+export const SetupModal: React.FC<SetupModalProps> = ({ isOpen, onClose, onSave, initialVND, initialTHB, initialStartDate, initialEndDate }) => {
   const [vnd, setVnd] = useState<string>('');
   const [thb, setThb] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
       setVnd(initialVND > 0 ? initialVND.toString() : '');
       setThb(initialTHB > 0 ? initialTHB.toString() : '');
+      setStartDate(initialStartDate || '');
+      setEndDate(initialEndDate || '');
     }
-  }, [isOpen, initialVND, initialTHB]);
+  }, [isOpen, initialVND, initialTHB, initialStartDate, initialEndDate]);
 
   const calculateRate = () => {
     const v = parseFloat(vnd);
@@ -32,7 +38,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({ isOpen, onClose, onSave,
     const v = parseFloat(vnd);
     const t = parseFloat(thb);
     if (v > 0 && t > 0) {
-      onSave(v, t);
+      onSave(v, t, startDate, endDate);
     }
   };
 
@@ -69,6 +75,27 @@ export const SetupModal: React.FC<SetupModalProps> = ({ isOpen, onClose, onSave,
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-lg font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 outline-none"
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">End Date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 outline-none"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="mt-6 p-4 bg-sky-50 rounded-xl border border-sky-100">
@@ -88,7 +115,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({ isOpen, onClose, onSave,
 
         <div className="flex gap-3 mt-6">
           <button onClick={onClose} className="w-1/3 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors">Cancel</button>
-          <button onClick={handleSave} className="w-2/3 bg-sky-600 hover:bg-sky-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-sky-200 transition-colors">Set Budget</button>
+          <button onClick={handleSave} className="w-2/3 bg-sky-600 hover:bg-sky-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-sky-200 transition-colors">Save Settings</button>
         </div>
       </div>
     </div>

@@ -1,112 +1,138 @@
 import React, { useState } from 'react';
 import type { Hotel } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
+import hotelImage from '../assets/hotel.jpg';
 
 interface HotelListProps {
   hotels: Hotel[];
-  onAdd: (hotel: any) => void;
+  onAdd: (hotel: Omit<Hotel, 'id' | 'created_at'>) => void;
   onDelete: (id: string) => void;
+  tripId: string;
 }
 
-export const HotelList: React.FC<HotelListProps> = ({ hotels, onAdd, onDelete }) => {
+export const HotelList: React.FC<HotelListProps> = ({ hotels, onAdd, onDelete, tripId }) => {
+  const { t } = useLanguage();
   const [isAdding, setIsAdding] = useState(false);
-  const [newHotel, setNewHotel] = useState({
+  const [newHotel, setNewHotel] = useState<Partial<Hotel>>({
     name: '',
     address: '',
+    price: 0,
     checkIn: '',
     checkOut: '',
-    price: '',
     bookingRef: ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newHotel.name || !newHotel.checkIn || !newHotel.checkOut) return;
+    if (!newHotel.name || !newHotel.price) return;
+
     onAdd({
-      ...newHotel,
-      price: Number(newHotel.price) || 0
+      tripId,
+      name: newHotel.name,
+      address: newHotel.address || '',
+      price: Number(newHotel.price),
+      checkIn: newHotel.checkIn || '',
+      checkOut: newHotel.checkOut || '',
+      bookingRef: newHotel.bookingRef || ''
     });
-    setNewHotel({ name: '', address: '', checkIn: '', checkOut: '', price: '', bookingRef: '' });
     setIsAdding(false);
+    setNewHotel({ name: '', address: '', price: 0, checkIn: '', checkOut: '', bookingRef: '' });
   };
 
   return (
     <div className="space-y-6">
-      {!isAdding ? (
+      {/* Hero Section */}
+      <div className="relative h-48 rounded-3xl overflow-hidden mb-6 group">
+        <img src={hotelImage} alt="Hotels" className="w-full h-full object-cover transition duration-700 group-hover:scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex flex-col justify-center px-8">
+          <h2 className="text-3xl font-black text-white mb-2 tracking-tight">{t('hotels.hero_title')}</h2>
+          <p className="text-white/90 font-medium max-w-xs">{t('hotels.hero_subtitle')}</p>
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center">
         <button
           onClick={() => setIsAdding(true)}
-          className="w-full py-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-bold hover:border-sky-400 hover:text-sky-500 transition flex items-center justify-center gap-2"
+          className="bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-slate-800/20 hover:bg-slate-900 transition flex items-center gap-2"
         >
-          <span className="text-xl">+</span> Add Hotel Booking
+          <i className="ph-bold ph-plus"></i> {t('hotels.add_stay')}
         </button>
-      ) : (
+      </div>
+
+      {isAdding && (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 space-y-4">
-          <h3 className="font-bold text-slate-800">New Hotel Booking</h3>
-          <input
-            type="text"
-            placeholder="Hotel Name"
-            value={newHotel.name}
-            onChange={e => setNewHotel({ ...newHotel, name: e.target.value })}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold focus:outline-none focus:border-sky-500"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Address (Optional)"
-            value={newHotel.address}
-            onChange={e => setNewHotel({ ...newHotel, address: e.target.value })}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-sky-500"
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-bold text-slate-400 ml-1">Check-in</label>
-              <input
-                type="date"
-                value={newHotel.checkIn}
-                onChange={e => setNewHotel({ ...newHotel, checkIn: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-sky-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-slate-400 ml-1">Check-out</label>
-              <input
-                type="date"
-                value={newHotel.checkOut}
-                onChange={e => setNewHotel({ ...newHotel, checkOut: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-sky-500"
-                required
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+          <h3 className="font-bold text-slate-800">{t('hotels.new_stay')}</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
-              type="number"
-              placeholder="Price (Total)"
-              value={newHotel.price}
-              onChange={e => setNewHotel({ ...newHotel, price: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-sky-500"
+              type="text"
+              placeholder={t('hotels.hotel_name')}
+              className="bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium focus:outline-none focus:border-sky-500"
+              value={newHotel.name}
+              onChange={e => setNewHotel({ ...newHotel, name: e.target.value })}
+              required
             />
             <input
               type="text"
-              placeholder="Booking Ref"
-              value={newHotel.bookingRef}
-              onChange={e => setNewHotel({ ...newHotel, bookingRef: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-sky-500"
+              placeholder={t('hotels.address')}
+              className="bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium focus:outline-none focus:border-sky-500"
+              value={newHotel.address}
+              onChange={e => setNewHotel({ ...newHotel, address: e.target.value })}
             />
           </div>
-          <div className="flex gap-3 pt-2">
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">{t('hotels.check_in')}</label>
+              <input
+                type="date"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium focus:outline-none focus:border-sky-500"
+                value={newHotel.checkIn}
+                onChange={e => setNewHotel({ ...newHotel, checkIn: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">{t('hotels.check_out')}</label>
+              <input
+                type="date"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium focus:outline-none focus:border-sky-500"
+                value={newHotel.checkOut}
+                onChange={e => setNewHotel({ ...newHotel, checkOut: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="number"
+              placeholder={t('hotels.price_per_night')}
+              className="bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium focus:outline-none focus:border-sky-500"
+              value={newHotel.price || ''}
+              onChange={e => setNewHotel({ ...newHotel, price: Number(e.target.value) })}
+              required
+            />
+            <input
+              type="text"
+              placeholder={t('hotels.booking_ref')}
+              className="bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium focus:outline-none focus:border-sky-500"
+              value={newHotel.bookingRef}
+              onChange={e => setNewHotel({ ...newHotel, bookingRef: e.target.value })}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
               onClick={() => setIsAdding(false)}
-              className="flex-1 bg-slate-100 text-slate-500 font-bold py-3 rounded-xl hover:bg-slate-200 transition"
+              className="px-4 py-2 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
-              className="flex-1 bg-sky-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-sky-500/30 hover:bg-sky-600 transition"
+              className="bg-sky-500 text-white px-6 py-2 rounded-xl font-bold shadow-lg shadow-sky-500/30 hover:bg-sky-600 transition"
             >
-              Save Booking
+              {t('common.save')}
             </button>
           </div>
         </form>

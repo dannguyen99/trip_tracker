@@ -40,6 +40,7 @@ export interface Restaurant {
   name: string;
   url?: string;
   notes?: string;
+  category?: string;
   isTried: boolean;
   cuisine?: string;
   priceRange?: string;
@@ -49,15 +50,31 @@ export interface Restaurant {
   imageUrl?: string;
 }
 
+export interface Activity {
+  id: string;
+  tripId: string;
+  name: string;
+  description?: string;
+  location?: string;
+  startTime: string; // ISO string
+  endTime?: string; // ISO string
+  type: 'food' | 'activity' | 'travel' | 'hotel' | 'other';
+  status: 'planned' | 'done';
+  notes?: string;
+}
+
 export interface TripData {
   id: string;
   name: string;
   totalBudgetVND: number;
   exchangeRate: number; // VND per 1 THB
+  startDate: string | null;
+  endDate: string | null;
   users: User[];
   expenses: Expense[];
   hotels: Hotel[];
   restaurants: Restaurant[];
+  activities: Activity[];
 }
 
 export interface AppState {

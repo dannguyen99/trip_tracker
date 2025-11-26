@@ -13,11 +13,17 @@ import { UserManagement } from './components/UserManagement';
 import { Tabs } from './components/Tabs';
 import { HotelList } from './components/HotelList';
 import { RestaurantList } from './components/RestaurantList';
+import { Itinerary } from './components/Itinerary';
 
-function App() {
+import { LanguageProvider } from './contexts/LanguageContext';
+
+import { useLanguage } from './contexts/LanguageContext';
+
+function AppContent() {
+  const { t } = useLanguage();
   // Simple URL routing for now: ?trip_id=...
   const [tripId, setTripId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'expenses' | 'hotels' | 'dining'>('expenses');
+  const [activeTab, setActiveTab] = useState<'expenses' | 'hotels' | 'dining' | 'itinerary'>('expenses');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -41,7 +47,10 @@ function App() {
     deleteHotel,
     addRestaurant,
     toggleRestaurantTried,
-    deleteRestaurant
+    deleteRestaurant,
+    addActivity,
+    updateActivity,
+    deleteActivity
   } = useTrip(tripId);
 
   const [isSetupOpen, setIsSetupOpen] = useState(false);
@@ -61,19 +70,19 @@ function App() {
       setTripId(newId);
     } catch (err) {
       console.error(err);
-      alert('Failed to create trip');
+      alert(t('common.error'));
     } finally {
       setIsCreating(false);
     }
   };
 
-  const handleSaveSetup = async (vnd: number, thb: number) => {
+  const handleSaveSetup = async (vnd: number, thb: number, startDate: string, endDate: string) => {
     try {
-      await updateTripSettings(vnd, vnd / thb);
+      await updateTripSettings(vnd, vnd / thb, startDate, endDate);
       setIsSetupOpen(false);
     } catch (err) {
       console.error(err);
-      alert('Failed to save settings');
+      alert(t('common.error'));
     }
   };
 
@@ -90,7 +99,7 @@ function App() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
         <div className="bg-white p-6 rounded-2xl shadow-lg text-center max-w-sm">
           <div className="text-red-500 text-4xl mb-2">⚠️</div>
-          <h2 className="text-xl font-bold text-slate-800 mb-2">Error Loading Trip</h2>
+          <h2 className="text-xl font-bold text-slate-800 mb-2">{t('common.error')}</h2>
           <p className="text-slate-500 mb-4">{error}</p>
           <button
             onClick={() => window.location.href = window.location.pathname}
@@ -116,8 +125,8 @@ function App() {
             <img src={heroImage} alt="Travel" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/90"></div>
             <div className="absolute bottom-4 left-6">
-              <h1 className="text-3xl font-extrabold text-slate-800">Trip Tracker</h1>
-              <p className="text-slate-600 font-medium">Where to next?</p>
+              <h1 className="text-3xl font-extrabold text-slate-800">{t('hero.title')}</h1>
+              <p className="text-slate-600 font-medium">{t('hero.subtitle')}</p>
             </div>
           </div>
 
@@ -125,13 +134,13 @@ function App() {
 
             {/* Create New Trip Card */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
-              <h2 className="text-lg font-bold text-slate-800 mb-4">Start a New Adventure</h2>
+              <h2 className="text-lg font-bold text-slate-800 mb-4">{t('hero.start_adventure')}</h2>
               <form onSubmit={handleCreateTrip} className="space-y-3">
                 <input
                   type="text"
                   value={newTripName}
                   onChange={(e) => setNewTripName(e.target.value)}
-                  placeholder="Trip Name (e.g. Bali 2025)"
+                  placeholder={t('hero.trip_name_placeholder')}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold focus:outline-none focus:border-sky-500 transition"
                 />
                 <button
@@ -139,36 +148,36 @@ function App() {
                   disabled={!newTripName || isCreating}
                   className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-sky-500/30 transition transform active:scale-[0.98] disabled:opacity-50"
                 >
-                  {isCreating ? 'Creating...' : 'Create Trip ✨'}
+                  {isCreating ? t('hero.creating') : t('hero.create_trip')}
                 </button>
               </form>
             </div>
 
             {/* Existing Trips List */}
             <div className="flex-1">
-              <h3 className="text-sm font-bold text-slate-400 uppercase mb-3 tracking-wider">Recent Trips</h3>
+              <h3 className="text-sm font-bold text-slate-400 uppercase mb-3 tracking-wider">{t('hero.recent_trips')}</h3>
 
               {tripsLoading ? (
                 <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500"></div></div>
               ) : trips.length === 0 ? (
-                <div className="text-center py-10 text-slate-400 italic">No trips yet. Start one above!</div>
+                <div className="text-center py-10 text-slate-400 italic">{t('hero.no_trips')}</div>
               ) : (
                 <div className="space-y-3 pb-8">
-                  {trips.map(t => (
+                  {trips.map(t_item => ( // Renamed t to t_item to avoid conflict with t() function
                     <button
-                      key={t.id}
+                      key={t_item.id}
                       onClick={() => {
-                        const newUrl = `${window.location.pathname}?trip_id=${t.id}`;
+                        const newUrl = `${window.location.pathname}?trip_id=${t_item.id}`;
                         window.history.pushState({ path: newUrl }, '', newUrl);
-                        setTripId(t.id);
+                        setTripId(t_item.id);
                       }}
                       className="w-full bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition flex items-center justify-between group text-left"
                     >
                       <div>
-                        <div className="font-bold text-slate-800 text-lg group-hover:text-sky-600 transition">{t.name}</div>
+                        <div className="font-bold text-slate-800 text-lg group-hover:text-sky-600 transition">{t_item.name}</div>
                         <div className="text-xs text-slate-400 flex gap-2">
-                          <span>📅 {new Date(t.created_at).toLocaleDateString()}</span>
-                          <span>👥 {t.member_count} members</span>
+                          <span>📅 {new Date(t_item.created_at).toLocaleDateString()}</span>
+                          <span>👥 {t_item.member_count} {t('hero.members')}</span>
                         </div>
                       </div>
                       <div className="text-2xl opacity-50 group-hover:opacity-100 transition">✈️</div>
@@ -182,13 +191,13 @@ function App() {
             <div className="pt-4 border-t border-slate-100">
               <details className="group">
                 <summary className="list-none text-xs font-bold text-slate-400 cursor-pointer hover:text-sky-500 transition flex items-center gap-1">
-                  <span>Have a Trip ID?</span>
+                  <span>{t('hero.have_trip_id')}</span>
                   <span className="group-open:rotate-180 transition-transform">▼</span>
                 </summary>
                 <div className="mt-2">
                   <input
                     type="text"
-                    placeholder="Paste Trip ID here..."
+                    placeholder={t('hero.paste_trip_id')}
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:border-slate-400"
                     onChange={(e) => {
                       if (e.target.value.length > 20) {
@@ -215,6 +224,8 @@ function App() {
         onSave={handleSaveSetup}
         initialVND={trip.totalBudgetVND}
         initialTHB={trip.totalBudgetVND > 0 ? Math.round(trip.totalBudgetVND / trip.exchangeRate) : 0}
+        initialStartDate={trip.startDate}
+        initialEndDate={trip.endDate}
       />
 
       {/* User Management */}
@@ -231,7 +242,6 @@ function App() {
         data={trip}
         onOpenSetup={() => setIsSetupOpen(true)}
         onManageUsers={() => setIsUserMgmtOpen(true)}
-        onReset={() => { }} // Reset not implemented yet
         onBack={() => {
           setTripId(null);
           window.history.pushState({}, '', window.location.pathname);
@@ -243,11 +253,11 @@ function App() {
         <button
           onClick={() => {
             navigator.clipboard.writeText(window.location.href);
-            alert('Link copied! Send it to your friends.');
+            alert(t('header.link_copied'));
           }}
           className="bg-white/20 backdrop-blur-md border border-white/10 text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-white/30 transition flex items-center gap-1"
         >
-          <span>🔗</span> Share Trip
+          <span>🔗</span> {t('header.share_trip')}
         </button>
       </div>
 
@@ -284,6 +294,7 @@ function App() {
             hotels={trip.hotels || []}
             onAdd={addHotel}
             onDelete={deleteHotel}
+            tripId={trip.id}
           />
         )}
 
@@ -293,11 +304,32 @@ function App() {
             onAdd={addRestaurant}
             onToggleTried={toggleRestaurantTried}
             onDelete={deleteRestaurant}
+            tripId={trip.id}
+          />
+        )}
+
+        {activeTab === 'itinerary' && (
+          <Itinerary
+            activities={trip.activities || []}
+            onAdd={addActivity}
+            onUpdate={updateActivity}
+            onDelete={deleteActivity}
+            tripId={trip.id}
+            startDate={trip.startDate}
+            endDate={trip.endDate}
           />
         )}
 
       </main>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }
 export default App;

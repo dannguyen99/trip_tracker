@@ -1,25 +1,29 @@
 import React, { useState } from 'react';
 import type { Restaurant } from '../types';
-import { RECOMMENDED_RESTAURANTS } from '../data/recommendations';
-import diningHero from '../assets/dinning.jpg';
+import { generateRestaurantRecommendations, isAIEnabled } from '../services/ai';
+import { useLanguage } from '../contexts/LanguageContext';
+import diningImage from '../assets/dining.jpg';
 
 interface RestaurantListProps {
   restaurants: Restaurant[];
-  onAdd: (restaurant: any) => void;
-  onToggleTried: (id: string, isTried: boolean) => void;
+  onAdd: (restaurant: Omit<Restaurant, 'id' | 'created_at'>) => void;
+  onToggleTried: (id: string, tried: boolean) => void;
   onDelete: (id: string) => void;
+  tripId: string;
 }
 
-export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onAdd, onToggleTried, onDelete }) => {
+export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onAdd, onToggleTried, onDelete, tripId }) => {
+  const { t } = useLanguage();
   const [isAdding, setIsAdding] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [newRestaurant, setNewRestaurant] = useState({
     name: '',
     cuisine: '',
-    priceRange: '',
-    rating: '',
+    priceRange: '$',
     location: '',
     description: '',
     url: '',
+    rating: '',
     notes: ''
   });
 
@@ -28,15 +32,41 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
     if (!newRestaurant.name) return;
     onAdd({
       ...newRestaurant,
+      tripId,
+      isTried: false,
       rating: newRestaurant.rating ? parseFloat(newRestaurant.rating) : undefined
     });
-    setNewRestaurant({ name: '', cuisine: '', priceRange: '', rating: '', location: '', description: '', url: '', notes: '' });
+    setNewRestaurant({
+      name: '', cuisine: '', priceRange: '$', location: '', description: '', url: '', rating: '', notes: ''
+    });
     setIsAdding(false);
   };
 
-  const handleAutoFill = () => {
-    if (confirm('Ask AI to generate recommendations?')) {
-      RECOMMENDED_RESTAURANTS.forEach(r => onAdd(r));
+  const handleGenerateRecommendations = async () => {
+    if (!isAIEnabled()) {
+      alert('Please add VITE_GEMINI_API_KEY to your .env file to use AI features.');
+      return;
+    }
+
+    const location = prompt('Where are you looking for restaurants?', 'Bangkok');
+    if (!location) return;
+
+    const preferences = prompt('Any specific preferences? (e.g., Spicy, Cheap, Romantic)', 'Local gems');
+
+    setIsLoading(true);
+    try {
+      const recommendations = await generateRestaurantRecommendations(location, preferences || '');
+      recommendations.forEach(r => onAdd({
+        ...r,
+        tripId,
+        isTried: false,
+        name: r.name || 'Unknown Restaurant'
+      }));
+    } catch (error) {
+      console.error('Failed to generate recommendations:', error);
+      alert('Sorry, AI could not generate recommendations at this time.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -48,29 +78,50 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="relative h-48 rounded-3xl overflow-hidden shadow-md group">
-        <img src={diningHero} alt="Dining" className="w-full h-full object-cover transition duration-700 group-hover:scale-105" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-lg border border-white/30">
-                ✨ AI Powered
-              </span>
-            </div>
-            <h2 className="text-white text-2xl font-bold">Culinary Journey</h2>
-            <p className="text-white/80 text-sm">Curated local flavors just for you.</p>
+      <div className="relative h-48 rounded-3xl overflow-hidden mb-8 group">
+        <img src={diningImage} alt="Dining" className="w-full h-full object-cover transition duration-700 group-hover:scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent flex flex-col justify-center px-8">
+          <h2 className="text-3xl font-black text-white mb-2 tracking-tight">{t('dining.hero_title')}</h2>
+          <p className="text-white/90 font-medium max-w-xs">{t('dining.hero_subtitle')}</p>
+          <div className="mt-4 flex gap-2">
+            <span className="bg-violet-500/20 backdrop-blur-md border border-violet-500/30 text-violet-200 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+              ✨ {t('dining.ai_powered')}
+            </span>
           </div>
         </div>
       </div>
 
-      {!isAdding ? (
+      {/* Add Button & AI Trigger */}
+      <div className="flex justify-between items-center mb-6">
         <button
           onClick={() => setIsAdding(true)}
-          className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 text-slate-400 font-bold hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50/30 transition flex items-center justify-center gap-2"
+          className="bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-slate-800/20 hover:bg-slate-900 transition flex items-center gap-2"
         >
-          <span className="text-xl">+</span> Add Recommendation
+          <i className="ph-bold ph-plus"></i> {t('dining.add_recommendation')}
         </button>
-      ) : (
+      </div>
+
+      {/* Empty State with AI Prompt */}
+      {restaurants.length === 0 && !isAdding && (
+        <div className="bg-gradient-to-br from-violet-50 to-fuchsia-50 rounded-3xl p-8 text-center border border-violet-100 dashed-border relative overflow-hidden">
+          <div className="relative z-10">
+            <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center mx-auto mb-4 text-3xl">
+              🤖
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">{t('dining.ai_concierge')}</h3>
+            <p className="text-slate-500 mb-6 max-w-md mx-auto">{t('dining.ai_concierge_desc')}</p>
+            <button
+              onClick={handleGenerateRecommendations}
+              disabled={isLoading || !isAIEnabled()}
+              className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-6 py-3 rounded-xl font-bold shadow-xl shadow-fuchsia-500/30 hover:shadow-fuchsia-500/50 transition transform hover:-translate-y-1 disabled:opacity-50 disabled:transform-none"
+            >
+              {isLoading ? <i className="ph-bold ph-spinner animate-spin"></i> : '✨'}
+              {isLoading ? t('dining.generating') : t('dining.generate_recommendations')}
+            </button>
+          </div>
+        </div>
+      )}
+      {isAdding && (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 space-y-4">
           <h3 className="font-bold text-slate-800">New Recommendation</h3>
 
@@ -180,6 +231,11 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
                     <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-indigo-100">
                       🤖 9{9 - index}% Match
                     </span>
+                    {restaurant.category && (
+                      <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold border border-orange-100">
+                        {restaurant.category}
+                      </span>
+                    )}
                     <span className="text-slate-400 font-mono">{restaurant.priceRange}</span>
                   </div>
                 </div>
@@ -191,10 +247,10 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
                 <div className="flex justify-between items-center pt-3 border-t border-slate-50">
                   <button
                     onClick={() => onToggleTried(restaurant.id, !restaurant.isTried)}
-                    className={`text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5 ${restaurant.isTried
+                    className={`text - xs font - bold px - 3 py - 2 rounded - xl transition flex items - center gap - 1.5 ${restaurant.isTried
                       ? 'bg-green-100 text-green-600'
                       : 'bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'
-                      }`}
+                      } `}
                   >
                     {restaurant.isTried ? (
                       <>
@@ -232,15 +288,15 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
             {otherSpots.map(restaurant => (
               <div
                 key={restaurant.id}
-                className={`bg-white p-4 rounded-xl shadow-sm border transition flex items-start gap-4 group ${restaurant.isTried ? 'border-green-200 bg-green-50/30' : 'border-slate-100 hover:shadow-md'
-                  }`}
+                className={`bg - white p - 4 rounded - xl shadow - sm border transition flex items - start gap - 4 group ${restaurant.isTried ? 'border-green-200 bg-green-50/30' : 'border-slate-100 hover:shadow-md'
+                  } `}
               >
                 <button
                   onClick={() => onToggleTried(restaurant.id, !restaurant.isTried)}
-                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mt-1 transition ${restaurant.isTried
+                  className={`w - 6 h - 6 rounded - full border - 2 flex items - center justify - center mt - 1 transition ${restaurant.isTried
                     ? 'bg-green-500 border-green-500 text-white'
                     : 'border-slate-300 text-transparent hover:border-green-400'
-                    }`}
+                    } `}
                 >
                   <i className="ph-bold ph-check text-xs"></i>
                 </button>
@@ -248,11 +304,12 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className={`font-bold text-base ${restaurant.isTried ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
+                      <h3 className={`font - bold text - base ${restaurant.isTried ? 'text-slate-500 line-through' : 'text-slate-800'} `}>
                         {restaurant.name}
                       </h3>
                       <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
                         {restaurant.rating && <span className="text-orange-500 font-bold">⭐ {restaurant.rating}</span>}
+                        {restaurant.category && <span>• {restaurant.category}</span>}
                         {restaurant.cuisine && <span>• {restaurant.cuisine}</span>}
                       </div>
                     </div>
@@ -281,19 +338,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
         </div>
       )}
 
-      {restaurants.length === 0 && !isAdding && (
-        <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-          <div className="text-4xl mb-3">✨</div>
-          <h3 className="text-slate-800 font-bold mb-1">AI Concierge</h3>
-          <p className="text-slate-400 text-sm mb-4">Let our AI suggest the best local spots for you.</p>
-          <button
-            onClick={handleAutoFill}
-            className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/30 hover:scale-105 transition"
-          >
-            ✨ Generate Recommendations
-          </button>
-        </div>
-      )}
+
     </div>
   );
 };

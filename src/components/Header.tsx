@@ -1,15 +1,17 @@
 import React from 'react';
 import type { TripData } from '../types';
 
+import { useLanguage } from '../contexts/LanguageContext';
+
 interface HeaderProps {
   data: TripData;
   onOpenSetup: () => void;
   onManageUsers: () => void;
-  onReset: () => void;
   onBack: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onManageUsers, onReset, onBack }) => {
+export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onManageUsers, onBack }) => {
+  const { t, language, setLanguage } = useLanguage();
   const totalSpent = data.expenses.reduce((sum, e) => sum + e.amountVND, 0);
   const remaining = data.totalBudgetVND - totalSpent;
   const percent = data.totalBudgetVND > 0 ? Math.min((totalSpent / data.totalBudgetVND) * 100, 100) : 0;
@@ -31,6 +33,20 @@ export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onManageUsers
             >
               <i className="ph-bold ph-arrow-left text-lg"></i>
             </button>
+            <button
+              onClick={onManageUsers}
+              className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition text-white"
+            >
+              <i className="ph-bold ph-users"></i>
+            </button>
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'vi' : 'en')}
+              className="h-10 px-3 rounded-full bg-white/10 backdrop-blur-md flex items-center gap-2 hover:bg-white/20 transition text-white font-bold text-xs border border-white/10"
+              title={language === 'en' ? 'Switch to Vietnamese' : 'Switch to English'}
+            >
+              <span className="text-base">{language === 'en' ? '🇺🇸' : '🇻🇳'}</span>
+              <span>{language.toUpperCase()}</span>
+            </button>
             <div onClick={onOpenSetup} className="cursor-pointer group">
               <h1 className="text-3xl font-extrabold tracking-tight leading-none">{data.name}</h1>
               <div className="flex items-center gap-2 text-xs font-medium text-sky-200/80 group-hover:text-white transition">
@@ -40,34 +56,26 @@ export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onManageUsers
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={onManageUsers} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition text-white">
-              <i className="ph ph-users text-lg"></i>
-            </button>
-            <button onClick={onReset} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-red-500/80 transition text-white">
-              <i className="ph ph-trash text-lg"></i>
-            </button>
+            <div className="text-center relative">
+              <div className="inline-block px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-widest mb-2">
+                {t('header.remaining_budget')}
+              </div>
+              <div className={`text-5xl font-extrabold mb-1 tracking-tight ${remaining < 0 ? 'text-red-300' : 'text-white'}`}>
+                {formatMoney(remaining)}
+              </div>
+              <div className="text-sm opacity-80">{t('header.spent')}: {formatMoney(totalSpent)}</div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mt-6 relative h-2 bg-slate-900/30 rounded-full overflow-hidden backdrop-blur-sm">
+              <div
+                className={`absolute top-0 left-0 h-full transition-all duration-1000 ease-out ${percent > 90 ? 'bg-red-500' : 'bg-sky-400'}`}
+                style={{ width: `${percent}%` }}
+              ></div>
+            </div>
+
           </div>
         </div>
-
-        {/* Main Budget Card */}
-        <div className="text-center relative">
-          <div className="inline-block px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-widest mb-2">
-            Remaining Budget
-          </div>
-          <div className={`text-5xl font-extrabold mb-1 tracking-tight ${remaining < 0 ? 'text-red-300' : 'text-white'}`}>
-            {formatMoney(remaining)}
-          </div>
-          <div className="text-sm opacity-80">Spent: {formatMoney(totalSpent)}</div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mt-6 relative h-2 bg-slate-900/30 rounded-full overflow-hidden backdrop-blur-sm">
-          <div
-            className={`absolute top-0 left-0 h-full transition-all duration-1000 ease-out ${percent > 90 ? 'bg-red-500' : 'bg-sky-400'}`}
-            style={{ width: `${percent}%` }}
-          ></div>
-        </div>
-
       </div>
     </header>
   );

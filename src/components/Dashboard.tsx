@@ -1,6 +1,6 @@
 import React from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
-import { Doughnut, Bar } from 'react-chartjs-2';
+import { Pie, Bar } from 'react-chartjs-2';
 import type { Expense, User } from '../types';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
@@ -33,7 +33,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ expenses, users }) => {
     datasets: [{
       data: Object.values(catTotals),
       backgroundColor: Object.keys(catTotals).map(k => CAT_COLORS[k] || '#CBD5E1'),
-      borderWidth: 0,
+      borderWidth: 2,
+      borderColor: '#ffffff'
     }]
   };
 
@@ -63,20 +64,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ expenses, users }) => {
     }
   };
 
-  const doughnutOptions = {
+  const pieOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    cutout: '75%'
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom' as const,
+        labels: {
+          boxWidth: 10,
+          font: { size: 10 }
+        }
+      }
+    }
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4 pop-in" style={{ animationDelay: '0.2s' }}>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pop-in" style={{ animationDelay: '0.2s' }}>
       <div className="bg-white rounded-3xl p-5 shadow-sm">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Category</h3>
-        <div className="relative h-24 w-full">
+        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Category Breakdown</h3>
+        <div className="relative h-64 w-full">
           {expenses.length > 0 ? (
-            <Doughnut data={catData} options={doughnutOptions} />
+            <Pie data={catData} options={pieOptions} />
           ) : (
             <div className="flex items-center justify-center h-full text-slate-300 text-sm italic">No data yet</div>
           )}
@@ -84,7 +93,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ expenses, users }) => {
       </div>
       <div className="bg-white rounded-3xl p-5 shadow-sm">
         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Top Spender</h3>
-        <div className="relative h-24 w-full">
+        <div className="relative h-64 w-full">
           {expenses.length > 0 ? (
             <Bar data={spendData} options={options} />
           ) : (

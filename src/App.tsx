@@ -10,10 +10,14 @@ import { Dashboard } from './components/Dashboard';
 import { Settlement } from './components/Settlement';
 import { History } from './components/History';
 import { UserManagement } from './components/UserManagement';
+import { Tabs } from './components/Tabs';
+import { HotelList } from './components/HotelList';
+import { RestaurantList } from './components/RestaurantList';
 
 function App() {
   // Simple URL routing for now: ?trip_id=...
   const [tripId, setTripId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'expenses' | 'hotels' | 'dining'>('expenses');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -32,7 +36,12 @@ function App() {
     addMember,
     updateMember,
     deleteMember,
-    updateTripSettings
+    updateTripSettings,
+    addHotel,
+    deleteHotel,
+    addRestaurant,
+    toggleRestaurantTried,
+    deleteRestaurant
   } = useTrip(tripId);
 
   const [isSetupOpen, setIsSetupOpen] = useState(false);
@@ -243,25 +252,50 @@ function App() {
       </div>
 
       <main className="max-w-4xl mx-auto px-4 space-y-8 relative z-20 pb-10">
-        <ExpenseForm
-          onAdd={addExpense}
-          exchangeRate={trip.exchangeRate}
-          users={trip.users}
-        />
 
-        <Dashboard expenses={trip.expenses} users={trip.users} />
+        <Tabs activeTab={activeTab} onChange={setActiveTab} />
 
-        <Settlement
-          expenses={trip.expenses}
-          exchangeRate={trip.exchangeRate}
-          users={trip.users}
-        />
+        {activeTab === 'expenses' && (
+          <>
+            <ExpenseForm
+              onAdd={addExpense}
+              exchangeRate={trip.exchangeRate}
+              users={trip.users}
+            />
 
-        <History
-          expenses={trip.expenses}
-          onDelete={deleteExpense}
-          users={trip.users}
-        />
+            <Dashboard expenses={trip.expenses} users={trip.users} />
+
+            <Settlement
+              expenses={trip.expenses}
+              exchangeRate={trip.exchangeRate}
+              users={trip.users}
+            />
+
+            <History
+              expenses={trip.expenses}
+              onDelete={deleteExpense}
+              users={trip.users}
+            />
+          </>
+        )}
+
+        {activeTab === 'hotels' && (
+          <HotelList
+            hotels={trip.hotels || []}
+            onAdd={addHotel}
+            onDelete={deleteHotel}
+          />
+        )}
+
+        {activeTab === 'dining' && (
+          <RestaurantList
+            restaurants={trip.restaurants || []}
+            onAdd={addRestaurant}
+            onToggleTried={toggleRestaurantTried}
+            onDelete={deleteRestaurant}
+          />
+        )}
+
       </main>
     </div>
   );

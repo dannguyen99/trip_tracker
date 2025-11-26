@@ -23,13 +23,41 @@ export interface Expense {
   date: string;
 }
 
+export interface Hotel {
+  id: string;
+  tripId: string;
+  name: string;
+  address?: string;
+  checkIn: string;
+  checkOut: string;
+  price: number;
+  bookingRef?: string;
+}
+
+export interface Restaurant {
+  id: string;
+  tripId: string;
+  name: string;
+  url?: string;
+  notes?: string;
+  isTried: boolean;
+  cuisine?: string;
+  priceRange?: string;
+  rating?: number;
+  location?: string;
+  description?: string;
+  imageUrl?: string;
+}
+
 export interface TripData {
   id: string;
   name: string;
-  expenses: Expense[];
   totalBudgetVND: number;
   exchangeRate: number; // VND per 1 THB
   users: User[];
+  expenses: Expense[];
+  hotels: Hotel[];
+  restaurants: Restaurant[];
 }
 
 export interface AppState {

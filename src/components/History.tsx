@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Expense, User } from '../types';
+import { exportToCSV, exportToExcel } from '../utils/export';
 
 interface HistoryProps {
   expenses: Expense[];
@@ -36,11 +37,34 @@ export const History: React.FC<HistoryProps> = ({ expenses, onDelete, users }) =
 
   return (
     <section className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 pop-in" style={{ animationDelay: '0.4s' }}>
-      <div className="flex items-center gap-2 mb-6">
-        <div className="bg-orange-100 text-orange-600 p-2 rounded-full">
-          <i className="ph-fill ph-clock-counter-clockwise text-lg"></i>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <div className="bg-orange-100 text-orange-600 p-2 rounded-full">
+            <i className="ph-fill ph-clock-counter-clockwise text-lg"></i>
+          </div>
+          <h2 className="font-bold text-slate-800">History</h2>
         </div>
-        <h2 className="font-bold text-slate-800">History</h2>
+
+        {expenses.length > 0 && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => exportToCSV(expenses, users)}
+              className="text-xs font-bold text-slate-500 hover:text-sky-600 flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100 transition"
+              title="Export to CSV"
+            >
+              <i className="ph-bold ph-file-csv"></i>
+              CSV
+            </button>
+            <button
+              onClick={() => exportToExcel(expenses, users)}
+              className="text-xs font-bold text-slate-500 hover:text-green-600 flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100 transition"
+              title="Export to Excel"
+            >
+              <i className="ph-bold ph-file-xls"></i>
+              Excel
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">

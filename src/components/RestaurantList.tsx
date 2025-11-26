@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Restaurant } from '../types';
 import { RECOMMENDED_RESTAURANTS } from '../data/recommendations';
+import diningHero from '../assets/dinning.jpg';
 
 interface RestaurantListProps {
   restaurants: Restaurant[];
@@ -34,17 +35,38 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
   };
 
   const handleAutoFill = () => {
-    if (confirm('Add 10 recommended spots to your list?')) {
+    if (confirm('Ask AI to generate recommendations?')) {
       RECOMMENDED_RESTAURANTS.forEach(r => onAdd(r));
     }
   };
 
+  // Sort by rating (descending)
+  const sortedRestaurants = [...restaurants].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  const topPicks = sortedRestaurants.slice(0, 3);
+  const otherSpots = sortedRestaurants.slice(3);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Hero Section */}
+      <div className="relative h-48 rounded-3xl overflow-hidden shadow-md group">
+        <img src={diningHero} alt="Dining" className="w-full h-full object-cover transition duration-700 group-hover:scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-6">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-lg border border-white/30">
+                ✨ AI Powered
+              </span>
+            </div>
+            <h2 className="text-white text-2xl font-bold">Culinary Journey</h2>
+            <p className="text-white/80 text-sm">Curated local flavors just for you.</p>
+          </div>
+        </div>
+      </div>
+
       {!isAdding ? (
         <button
           onClick={() => setIsAdding(true)}
-          className="w-full py-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-bold hover:border-orange-400 hover:text-orange-500 transition flex items-center justify-center gap-2"
+          className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 text-slate-400 font-bold hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50/30 transition flex items-center justify-center gap-2"
         >
           <span className="text-xl">+</span> Add Recommendation
         </button>
@@ -133,92 +155,145 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
         </form>
       )}
 
-      <div className="grid grid-cols-1 gap-4">
-        {restaurants.map(restaurant => (
-          <div
-            key={restaurant.id}
-            className={`bg-white p-5 rounded-2xl shadow-sm border transition relative group ${restaurant.isTried ? 'border-green-200 bg-green-50/30' : 'border-slate-100 hover:shadow-md'
-              }`}
-          >
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className={`font-bold text-lg ${restaurant.isTried ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
-                    {restaurant.name}
-                  </h3>
-                  {restaurant.rating && (
-                    <span className="bg-orange-100 text-orange-600 text-xs font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
-                      ⭐ {restaurant.rating}
+      {/* Top Picks Section */}
+      {topPicks.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-xl">✨</span> AI Top Picks
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {topPicks.map((restaurant, index) => (
+              <div
+                key={restaurant.id}
+                className="bg-white p-5 rounded-2xl shadow-lg shadow-indigo-500/5 border border-indigo-50 relative group hover:-translate-y-1 transition duration-300"
+              >
+                {/* AI Glow Effect */}
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-t-2xl"></div>
+
+                <div className="absolute -top-3 -right-3 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg border-2 border-white z-10 text-xs">
+                  #{index + 1}
+                </div>
+
+                <div className="mb-3 mt-2">
+                  <h3 className="font-bold text-lg text-slate-800 leading-tight mb-1">{restaurant.name}</h3>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-indigo-100">
+                      🤖 9{9 - index}% Match
                     </span>
+                    <span className="text-slate-400 font-mono">{restaurant.priceRange}</span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-500 line-clamp-3 mb-3 h-[3.6em]">
+                  {restaurant.description || "No description available."}
+                </p>
+
+                <div className="flex justify-between items-center pt-3 border-t border-slate-50">
+                  <button
+                    onClick={() => onToggleTried(restaurant.id, !restaurant.isTried)}
+                    className={`text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5 ${restaurant.isTried
+                      ? 'bg-green-100 text-green-600'
+                      : 'bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'
+                      }`}
+                  >
+                    {restaurant.isTried ? (
+                      <>
+                        <i className="ph-fill ph-check-circle text-sm"></i> Tried
+                      </>
+                    ) : (
+                      <>
+                        <i className="ph-bold ph-check-circle text-sm"></i> Mark Tried
+                      </>
+                    )}
+                  </button>
+
+                  {restaurant.url && (
+                    <a
+                      href={restaurant.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-slate-300 hover:text-indigo-500 transition p-1"
+                    >
+                      <i className="ph-fill ph-map-pin text-xl"></i>
+                    </a>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  {restaurant.cuisine && <span className="font-semibold text-slate-600">{restaurant.cuisine}</span>}
-                  {restaurant.cuisine && restaurant.priceRange && <span>•</span>}
-                  {restaurant.priceRange && <span className="font-mono text-slate-400">{restaurant.priceRange}</span>}
-                  {(restaurant.cuisine || restaurant.priceRange) && restaurant.location && <span>•</span>}
-                  {restaurant.location && <span>📍 {restaurant.location}</span>}
-                </div>
               </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-              <div className="flex gap-2">
+      {/* Other Spots Section */}
+      {otherSpots.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-8 mb-2">More Gems</h3>
+          <div className="grid grid-cols-1 gap-3">
+            {otherSpots.map(restaurant => (
+              <div
+                key={restaurant.id}
+                className={`bg-white p-4 rounded-xl shadow-sm border transition flex items-start gap-4 group ${restaurant.isTried ? 'border-green-200 bg-green-50/30' : 'border-slate-100 hover:shadow-md'
+                  }`}
+              >
                 <button
                   onClick={() => onToggleTried(restaurant.id, !restaurant.isTried)}
-                  className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition ${restaurant.isTried
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mt-1 transition ${restaurant.isTried
                     ? 'bg-green-500 border-green-500 text-white'
-                    : 'border-slate-200 text-slate-300 hover:border-green-400 hover:text-green-400'
+                    : 'border-slate-300 text-transparent hover:border-green-400'
                     }`}
-                  title={restaurant.isTried ? "Mark as not tried" : "Mark as tried"}
                 >
-                  <i className="ph-bold ph-check"></i>
+                  <i className="ph-bold ph-check text-xs"></i>
                 </button>
-                <button
-                  onClick={() => onDelete(restaurant.id)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition"
-                >
-                  <i className="ph-bold ph-trash"></i>
-                </button>
+
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className={`font-bold text-base ${restaurant.isTried ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
+                        {restaurant.name}
+                      </h3>
+                      <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                        {restaurant.rating && <span className="text-orange-500 font-bold">⭐ {restaurant.rating}</span>}
+                        {restaurant.cuisine && <span>• {restaurant.cuisine}</span>}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onDelete(restaurant.id)}
+                      className="text-slate-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
+                    >
+                      <i className="ph-bold ph-trash"></i>
+                    </button>
+                  </div>
+
+                  {restaurant.url && (
+                    <a
+                      href={restaurant.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-sky-500 mt-2 hover:underline"
+                    >
+                      <i className="ph-bold ph-map-pin"></i> View Map
+                    </a>
+                  )}
+                </div>
               </div>
-            </div>
-
-            {restaurant.description && (
-              <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-                {restaurant.description}
-              </p>
-            )}
-
-            {restaurant.notes && (
-              <div className="text-xs text-slate-400 italic mb-3 bg-slate-50 p-2 rounded">
-                📝 Note: {restaurant.notes}
-              </div>
-            )}
-
-            {restaurant.url && (
-              <a
-                href={restaurant.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-bold text-sky-500 hover:underline"
-              >
-                <i className="ph-bold ph-map-pin"></i> View on Google Maps
-              </a>
-            )}
+            ))}
           </div>
-        ))}
-        {restaurants.length === 0 && !isAdding && (
-          <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-            <div className="text-4xl mb-3">🍽️</div>
-            <h3 className="text-slate-800 font-bold mb-1">Hungry?</h3>
-            <p className="text-slate-400 text-sm mb-4">Add some restaurant recommendations!</p>
-            <button
-              onClick={handleAutoFill}
-              className="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 hover:text-sky-500 transition"
-            >
-              ✨ Auto-Fill Recommendations
-            </button>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {restaurants.length === 0 && !isAdding && (
+        <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+          <div className="text-4xl mb-3">✨</div>
+          <h3 className="text-slate-800 font-bold mb-1">AI Concierge</h3>
+          <p className="text-slate-400 text-sm mb-4">Let our AI suggest the best local spots for you.</p>
+          <button
+            onClick={handleAutoFill}
+            className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/30 hover:scale-105 transition"
+          >
+            ✨ Generate Recommendations
+          </button>
+        </div>
+      )}
     </div>
   );
 };

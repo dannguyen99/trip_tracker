@@ -48,6 +48,7 @@ function AppContent() {
     addRestaurant,
     toggleRestaurantTried,
     deleteRestaurant,
+    clearRestaurants,
     addActivity,
     updateActivity,
     deleteActivity
@@ -304,6 +305,7 @@ function AppContent() {
             onAdd={addRestaurant}
             onToggleTried={toggleRestaurantTried}
             onDelete={deleteRestaurant}
+            onClear={clearRestaurants}
             tripId={trip.id}
           />
         )}
@@ -317,6 +319,7 @@ function AppContent() {
             tripId={trip.id}
             startDate={trip.startDate}
             endDate={trip.endDate}
+            onOpenSetup={() => setIsSetupOpen(true)}
           />
         )}
 

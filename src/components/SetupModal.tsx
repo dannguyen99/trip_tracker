@@ -35,11 +35,26 @@ export const SetupModal: React.FC<SetupModalProps> = ({ isOpen, onClose, onSave,
   };
 
   const handleSave = () => {
-    const v = parseFloat(vnd);
-    const t = parseFloat(thb);
-    if (v > 0 && t > 0) {
-      onSave(v, t, startDate, endDate);
+    const v = parseFloat(vnd) || 0;
+    const t = parseFloat(thb) || 0;
+
+    // Validation:
+    // 1. Allow if budget is set (v > 0 && t > 0)
+    // 2. OR if dates are set (startDate && endDate)
+    const hasBudget = v > 0 && t > 0;
+    const hasDates = startDate && endDate;
+
+    if (!hasBudget && !hasDates) {
+      alert('Please enter either a budget or trip dates.');
+      return;
     }
+
+    if (hasDates && startDate > endDate) {
+      alert('End date must be after start date.');
+      return;
+    }
+
+    onSave(v, t, startDate, endDate);
   };
 
   const rate = calculateRate();

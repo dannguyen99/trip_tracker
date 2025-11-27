@@ -128,7 +128,8 @@ export const useTrip = (tripId: string | null) => {
             rating: r.rating,
             location: r.location,
             description: r.description,
-            imageUrl: r.image_url
+            imageUrl: r.image_url,
+            tiktokUrl: r.tiktok_url
           })),
           activities: activitiesData.map((a: any) => ({
             id: a.id,
@@ -140,7 +141,14 @@ export const useTrip = (tripId: string | null) => {
             endTime: a.end_time,
             type: a.type,
             status: a.status,
-            notes: a.notes
+            notes: a.notes,
+            // New rich fields
+            icon: a.icon,
+            tag: a.tag,
+            tagColor: a.tag_color,
+            tips: a.tips,
+            rating: a.rating,
+            images: a.images
           }))
         });
       }
@@ -230,7 +238,8 @@ export const useTrip = (tripId: string | null) => {
       rating: restaurant.rating,
       location: restaurant.location,
       description: restaurant.description,
-      image_url: restaurant.imageUrl
+      image_url: restaurant.imageUrl,
+      tiktok_url: restaurant.tiktokUrl
     });
     if (error) throw error;
     fetchTrip(false);
@@ -244,6 +253,13 @@ export const useTrip = (tripId: string | null) => {
 
   const deleteRestaurant = async (id: string) => {
     const { error } = await supabase.from('restaurants').delete().eq('id', id);
+    if (error) throw error;
+    fetchTrip(false);
+  };
+
+  const clearRestaurants = async () => {
+    if (!tripId) return;
+    const { error } = await supabase.from('restaurants').delete().eq('trip_id', tripId);
     if (error) throw error;
     fetchTrip(false);
   };
@@ -339,7 +355,14 @@ export const useTrip = (tripId: string | null) => {
       end_time: activity.endTime,
       type: activity.type,
       status: activity.status,
-      notes: activity.notes
+      notes: activity.notes,
+      // New rich fields
+      icon: activity.icon,
+      tag: activity.tag,
+      tag_color: activity.tagColor,
+      tips: activity.tips,
+      rating: activity.rating,
+      images: activity.images
     });
     if (error) throw error;
     fetchTrip(false);
@@ -356,6 +379,14 @@ export const useTrip = (tripId: string | null) => {
     if (updates.type) dbUpdates.type = updates.type;
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.notes) dbUpdates.notes = updates.notes;
+
+    // New rich fields
+    if (updates.icon !== undefined) dbUpdates.icon = updates.icon;
+    if (updates.tag !== undefined) dbUpdates.tag = updates.tag;
+    if (updates.tagColor !== undefined) dbUpdates.tag_color = updates.tagColor;
+    if (updates.tips !== undefined) dbUpdates.tips = updates.tips;
+    if (updates.rating !== undefined) dbUpdates.rating = updates.rating;
+    if (updates.images !== undefined) dbUpdates.images = updates.images;
 
     const { error } = await supabase.from('activities').update(dbUpdates).eq('id', id);
     if (error) throw error;
@@ -384,6 +415,7 @@ export const useTrip = (tripId: string | null) => {
     addRestaurant,
     toggleRestaurantTried,
     deleteRestaurant,
+    clearRestaurants,
     addActivity,
     updateActivity,
     deleteActivity

@@ -3,16 +3,18 @@ import type { Restaurant } from '../types';
 import { generateRestaurantRecommendations, isAIEnabled } from '../services/ai';
 import { useLanguage } from '../contexts/LanguageContext';
 import diningImage from '../assets/dining.jpg';
+import { CURATED_RESTAURANTS } from '../data/curatedRestaurants';
 
 interface RestaurantListProps {
   restaurants: Restaurant[];
   onAdd: (restaurant: Omit<Restaurant, 'id' | 'created_at'>) => void;
   onToggleTried: (id: string, tried: boolean) => void;
   onDelete: (id: string) => void;
+  onClear: () => void;
   tripId: string;
 }
 
-export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onAdd, onToggleTried, onDelete, tripId }) => {
+export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onAdd, onToggleTried, onDelete, onClear, tripId }) => {
   const { t } = useLanguage();
   const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +25,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
     location: '',
     description: '',
     url: '',
+    tiktokUrl: '',
     rating: '',
     notes: ''
   });
@@ -37,21 +40,21 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
       rating: newRestaurant.rating ? parseFloat(newRestaurant.rating) : undefined
     });
     setNewRestaurant({
-      name: '', cuisine: '', priceRange: '$', location: '', description: '', url: '', rating: '', notes: ''
+      name: '', cuisine: '', priceRange: '$', location: '', description: '', url: '', tiktokUrl: '', rating: '', notes: ''
     });
     setIsAdding(false);
   };
 
   const handleGenerateRecommendations = async () => {
     if (!isAIEnabled()) {
-      alert('Please add VITE_GEMINI_API_KEY to your .env file to use AI features.');
+      alert(t('dining.ai_alert_api_key'));
       return;
     }
 
-    const location = prompt('Where are you looking for restaurants?', 'Bangkok');
+    const location = prompt(t('dining.ai_prompt_location'), 'Bangkok');
     if (!location) return;
 
-    const preferences = prompt('Any specific preferences? (e.g., Spicy, Cheap, Romantic)', 'Local gems');
+    const preferences = prompt(t('dining.ai_prompt_preferences'), 'Local gems');
 
     setIsLoading(true);
     try {
@@ -64,16 +67,38 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
       }));
     } catch (error) {
       console.error('Failed to generate recommendations:', error);
-      alert('Sorry, AI could not generate recommendations at this time.');
+      alert(t('dining.ai_alert_error'));
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleImportCurated = () => {
+    if (confirm(t('dining.import_curated_list') + '?')) {
+      CURATED_RESTAURANTS.forEach(r => {
+        onAdd({
+          ...r,
+          tripId,
+          isTried: false
+        });
+      });
+    }
+  };
+
+  const handleClearAll = () => {
+    if (confirm(t('dining.confirm_clear_restaurants'))) {
+      onClear();
+    }
+  };
+
   // Sort by rating (descending)
   const sortedRestaurants = [...restaurants].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-  const topPicks = sortedRestaurants.slice(0, 3);
-  const otherSpots = sortedRestaurants.slice(3);
+
+  // Top Picks: Top 3 UNTRIED restaurants
+  const topPicks = sortedRestaurants.filter(r => !r.isTried).slice(0, 3);
+
+  // Other Spots: Everyone else (including tried ones, and untried ones that didn't make top 3)
+  const otherSpots = sortedRestaurants.filter(r => !topPicks.includes(r));
 
   return (
     <div className="space-y-8">
@@ -99,6 +124,22 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
         >
           <i className="ph-bold ph-plus"></i> {t('dining.add_recommendation')}
         </button>
+
+        <button
+          onClick={handleImportCurated}
+          className="bg-white text-orange-600 px-5 py-2.5 rounded-xl font-bold shadow-sm border border-orange-100 hover:bg-orange-50 transition flex items-center gap-2"
+        >
+          <i className="ph-bold ph-download-simple"></i> {t('dining.import_curated_list')}
+        </button>
+
+        {restaurants.length > 0 && (
+          <button
+            onClick={handleClearAll}
+            className="bg-red-50 text-red-500 px-5 py-2.5 rounded-xl font-bold shadow-sm border border-red-100 hover:bg-red-100 transition flex items-center gap-2 ml-2"
+          >
+            <i className="ph-bold ph-trash"></i> {t('dining.clear_all_restaurants')}
+          </button>
+        )}
       </div>
 
       {/* Empty State with AI Prompt */}
@@ -123,12 +164,12 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
       )}
       {isAdding && (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 space-y-4">
-          <h3 className="font-bold text-slate-800">New Recommendation</h3>
+          <h3 className="font-bold text-slate-800">{t('dining.new_recommendation')}</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               type="text"
-              placeholder="Restaurant Name"
+              placeholder={t('dining.restaurant_name_placeholder')}
               value={newRestaurant.name}
               onChange={e => setNewRestaurant({ ...newRestaurant, name: e.target.value })}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold focus:outline-none focus:border-orange-500"
@@ -136,7 +177,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
             />
             <input
               type="text"
-              placeholder="Cuisine (e.g. Thai, Italian)"
+              placeholder={t('dining.cuisine_placeholder')}
               value={newRestaurant.cuisine}
               onChange={e => setNewRestaurant({ ...newRestaurant, cuisine: e.target.value })}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-orange-500"
@@ -149,7 +190,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
               onChange={e => setNewRestaurant({ ...newRestaurant, priceRange: e.target.value })}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-orange-500"
             >
-              <option value="">Price</option>
+              <option value="">{t('dining.price_placeholder')}</option>
               <option value="$">$ (Cheap)</option>
               <option value="$$">$$ (Moderate)</option>
               <option value="$$$">$$$ (Expensive)</option>
@@ -159,14 +200,14 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
               step="0.1"
               min="0"
               max="5"
-              placeholder="Rating (0-5)"
+              placeholder={t('dining.rating_placeholder')}
               value={newRestaurant.rating}
               onChange={e => setNewRestaurant({ ...newRestaurant, rating: e.target.value })}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-orange-500"
             />
             <input
               type="text"
-              placeholder="Area / Location"
+              placeholder={t('dining.area_placeholder')}
               value={newRestaurant.location}
               onChange={e => setNewRestaurant({ ...newRestaurant, location: e.target.value })}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-orange-500"
@@ -174,7 +215,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
           </div>
 
           <textarea
-            placeholder="Description (Short & Punchy)"
+            placeholder={t('dining.description_placeholder')}
             value={newRestaurant.description}
             onChange={e => setNewRestaurant({ ...newRestaurant, description: e.target.value })}
             className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-orange-500 min-h-[60px]"
@@ -182,9 +223,17 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
 
           <input
             type="url"
-            placeholder="Google Maps Link"
+            placeholder={t('dining.url_placeholder')}
             value={newRestaurant.url}
             onChange={e => setNewRestaurant({ ...newRestaurant, url: e.target.value })}
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-orange-500"
+          />
+
+          <input
+            type="url"
+            placeholder={t('dining.tiktok_placeholder')}
+            value={newRestaurant.tiktokUrl}
+            onChange={e => setNewRestaurant({ ...newRestaurant, tiktokUrl: e.target.value })}
             className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-orange-500"
           />
 
@@ -194,13 +243,13 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
               onClick={() => setIsAdding(false)}
               className="flex-1 bg-slate-100 text-slate-500 font-bold py-3 rounded-xl hover:bg-slate-200 transition"
             >
-              Cancel
+              {t('dining.cancel')}
             </button>
             <button
               type="submit"
               className="flex-1 bg-orange-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-orange-500/30 hover:bg-orange-600 transition"
             >
-              Save Spot
+              {t('dining.save')}
             </button>
           </div>
         </form>
@@ -210,7 +259,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
       {topPicks.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-            <span className="text-xl">✨</span> AI Top Picks
+            <span className="text-xl">✨</span> {t('dining.ai_top_picks')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {topPicks.map((restaurant, index) => (
@@ -218,61 +267,74 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
                 key={restaurant.id}
                 className="bg-white p-5 rounded-2xl shadow-lg shadow-indigo-500/5 border border-indigo-50 relative group hover:-translate-y-1 transition duration-300"
               >
-                {/* AI Glow Effect */}
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-t-2xl"></div>
 
-                <div className="absolute -top-3 -right-3 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg border-2 border-white z-10 text-xs">
-                  #{index + 1}
-                </div>
-
-                <div className="mb-3 mt-2">
-                  <h3 className="font-bold text-lg text-slate-800 leading-tight mb-1">{restaurant.name}</h3>
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-indigo-100">
-                      🤖 9{9 - index}% Match
-                    </span>
-                    {restaurant.category && (
-                      <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold border border-orange-100">
-                        {restaurant.category}
-                      </span>
-                    )}
-                    <span className="text-slate-400 font-mono">{restaurant.priceRange}</span>
+                <div className="flex flex-col h-full">
+                  <div className="relative">
+                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg border-2 border-white z-10 text-xs">
+                      #{index + 1}
+                    </div>
                   </div>
-                </div>
 
-                <p className="text-xs text-slate-500 line-clamp-3 mb-3 h-[3.6em]">
-                  {restaurant.description || "No description available."}
-                </p>
+                  <div className="mb-3 mt-2">
+                    <h3 className="font-bold text-lg text-slate-800 leading-tight mb-1">{restaurant.name}</h3>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-indigo-100">
+                        🤖 9{9 - index}% {t('dining.match_label')}
+                      </span>
+                      {restaurant.category && (
+                        <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold border border-orange-100">
+                          {restaurant.category}
+                        </span>
+                      )}
+                      <span className="text-slate-400 font-mono">{restaurant.priceRange}</span>
+                    </div>
+                  </div>
 
-                <div className="flex justify-between items-center pt-3 border-t border-slate-50">
-                  <button
-                    onClick={() => onToggleTried(restaurant.id, !restaurant.isTried)}
-                    className={`text - xs font - bold px - 3 py - 2 rounded - xl transition flex items - center gap - 1.5 ${restaurant.isTried
-                      ? 'bg-green-100 text-green-600'
-                      : 'bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'
-                      } `}
-                  >
-                    {restaurant.isTried ? (
-                      <>
-                        <i className="ph-fill ph-check-circle text-sm"></i> Tried
-                      </>
-                    ) : (
-                      <>
-                        <i className="ph-bold ph-check-circle text-sm"></i> Mark Tried
-                      </>
-                    )}
-                  </button>
+                  <p className="text-xs text-slate-500 line-clamp-3 mb-3 h-[3.6em] flex-grow">
+                    {restaurant.description || "No description available."}
+                  </p>
 
-                  {restaurant.url && (
-                    <a
-                      href={restaurant.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-300 hover:text-indigo-500 transition p-1"
+                  <div className="flex justify-between items-center pt-3 border-t border-slate-50 mt-auto">
+                    <button
+                      onClick={() => onToggleTried(restaurant.id, !restaurant.isTried)}
+                      className={`text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5 ${restaurant.isTried
+                        ? 'bg-green-100 text-green-600'
+                        : 'bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'
+                        }`}
                     >
-                      <i className="ph-fill ph-map-pin text-xl"></i>
-                    </a>
-                  )}
+                      {restaurant.isTried ? (
+                        <>
+                          <i className="ph-fill ph-check-circle text-sm"></i> {t('dining.tried_label')}
+                        </>
+                      ) : (
+                        <>
+                          <i className="ph-bold ph-check-circle text-sm"></i> {t('dining.mark_tried_label')}
+                        </>
+                      )}
+                    </button>
+
+                    {restaurant.url && (
+                      <a
+                        href={restaurant.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-slate-300 hover:text-indigo-500 transition p-1"
+                      >
+                        <i className="ph-fill ph-map-pin text-xl"></i>
+                      </a>
+                    )}
+                    {restaurant.tiktokUrl && (
+                      <a
+                        href={restaurant.tiktokUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-slate-300 hover:text-black transition p-1"
+                      >
+                        <i className="ph-fill ph-tiktok-logo text-xl text-black"></i>
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -283,20 +345,20 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
       {/* Other Spots Section */}
       {otherSpots.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-8 mb-2">More Gems</h3>
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-8 mb-2">{t('dining.more_gems_title')}</h3>
           <div className="grid grid-cols-1 gap-3">
             {otherSpots.map(restaurant => (
               <div
                 key={restaurant.id}
-                className={`bg - white p - 4 rounded - xl shadow - sm border transition flex items - start gap - 4 group ${restaurant.isTried ? 'border-green-200 bg-green-50/30' : 'border-slate-100 hover:shadow-md'
-                  } `}
+                className={`bg-white p-4 rounded-xl shadow-sm border transition flex items-start gap-4 group ${restaurant.isTried ? 'border-green-200 bg-green-50/30' : 'border-slate-100 hover:shadow-md'
+                  }`}
               >
                 <button
                   onClick={() => onToggleTried(restaurant.id, !restaurant.isTried)}
-                  className={`w - 6 h - 6 rounded - full border - 2 flex items - center justify - center mt - 1 transition ${restaurant.isTried
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mt-1 transition ${restaurant.isTried
                     ? 'bg-green-500 border-green-500 text-white'
                     : 'border-slate-300 text-transparent hover:border-green-400'
-                    } `}
+                    }`}
                 >
                   <i className="ph-bold ph-check text-xs"></i>
                 </button>
@@ -304,14 +366,18 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className={`font - bold text - base ${restaurant.isTried ? 'text-slate-500 line-through' : 'text-slate-800'} `}>
+                      <h3 className={`font-bold text-base ${restaurant.isTried ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
                         {restaurant.name}
                       </h3>
                       <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
                         {restaurant.rating && <span className="text-orange-500 font-bold">⭐ {restaurant.rating}</span>}
                         {restaurant.category && <span>• {restaurant.category}</span>}
+                        {restaurant.category && <span>• {restaurant.category}</span>}
                         {restaurant.cuisine && <span>• {restaurant.cuisine}</span>}
                       </div>
+                      {restaurant.description && (
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">{restaurant.description}</p>
+                      )}
                     </div>
                     <button
                       onClick={() => onDelete(restaurant.id)}
@@ -328,7 +394,17 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs font-bold text-sky-500 mt-2 hover:underline"
                     >
-                      <i className="ph-bold ph-map-pin"></i> View Map
+                      <i className="ph-bold ph-map-pin"></i> {t('dining.view_map_label')}
+                    </a>
+                  )}
+                  {restaurant.tiktokUrl && (
+                    <a
+                      href={restaurant.tiktokUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-black mt-2 hover:underline ml-3"
+                    >
+                      <i className="ph-bold ph-tiktok-logo"></i> {t('dining.tiktok_link')}
                     </a>
                   )}
                 </div>

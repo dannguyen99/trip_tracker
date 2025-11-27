@@ -83,7 +83,7 @@ export const HotelList: React.FC<HotelListProps> = ({ hotels, onAdd, onDelete, t
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">{t('hotels.check_in')}</label>
+              <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">{t('hotels.check_in_label')}</label>
               <input
                 type="date"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium focus:outline-none focus:border-sky-500"
@@ -92,7 +92,7 @@ export const HotelList: React.FC<HotelListProps> = ({ hotels, onAdd, onDelete, t
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">{t('hotels.check_out')}</label>
+              <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">{t('hotels.check_out_label')}</label>
               <input
                 type="date"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium focus:outline-none focus:border-sky-500"
@@ -157,12 +157,12 @@ export const HotelList: React.FC<HotelListProps> = ({ hotels, onAdd, onDelete, t
 
                 <div className="flex gap-4 text-sm text-slate-600 mt-2 bg-slate-50 p-3 rounded-lg inline-flex">
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-slate-400">Check-in</div>
+                    <div className="text-[10px] uppercase font-bold text-slate-400">{t('hotels.check_in_label')}</div>
                     <div className="font-bold">{new Date(hotel.checkIn).toLocaleDateString()}</div>
                   </div>
                   <div className="w-px bg-slate-200"></div>
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-slate-400">Check-out</div>
+                    <div className="text-[10px] uppercase font-bold text-slate-400">{t('hotels.check_out_label')}</div>
                     <div className="font-bold">{new Date(hotel.checkOut).toLocaleDateString()}</div>
                   </div>
                 </div>
@@ -171,7 +171,7 @@ export const HotelList: React.FC<HotelListProps> = ({ hotels, onAdd, onDelete, t
                   <div className="mt-3 flex gap-4 text-xs">
                     {hotel.bookingRef && (
                       <span className="bg-slate-100 px-2 py-1 rounded text-slate-500 font-mono">
-                        Ref: {hotel.bookingRef}
+                        {t('hotels.ref_label')}: {hotel.bookingRef}
                       </span>
                     )}
                     {hotel.price > 0 && (

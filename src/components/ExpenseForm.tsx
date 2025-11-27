@@ -7,18 +7,22 @@ interface ExpenseFormProps {
   users: User[];
 }
 
-const CATEGORIES: { id: Category; icon: string; label: string }[] = [
-  { id: 'Food', icon: 'ph-bowl-food', label: 'Food' },
-  { id: 'Transport', icon: 'ph-taxi', label: 'Taxi' },
-  { id: 'Hotel', icon: 'ph-bed', label: 'Stay' },
-  { id: 'Shopping', icon: 'ph-shopping-bag-open', label: 'Shop' },
-  { id: 'Nightlife', icon: 'ph-martini', label: 'Party' },
-  { id: 'Massage', icon: 'ph-sparkle', label: 'Spa' },
-  { id: 'Tours', icon: 'ph-ticket', label: 'Ticket' },
-  { id: 'Misc', icon: 'ph-dots-three-circle', label: 'Misc' },
+const CATEGORIES: { id: Category; icon: string; labelKey: string }[] = [
+  { id: 'Food', icon: 'ph-bowl-food', labelKey: 'food' },
+  { id: 'Transport', icon: 'ph-taxi', labelKey: 'transport' },
+  { id: 'Hotel', icon: 'ph-bed', labelKey: 'hotel' },
+  { id: 'Shopping', icon: 'ph-shopping-bag-open', labelKey: 'shopping' },
+  { id: 'Nightlife', icon: 'ph-martini', labelKey: 'nightlife' },
+  { id: 'Massage', icon: 'ph-sparkle', labelKey: 'massage' },
+  { id: 'Tours', icon: 'ph-ticket', labelKey: 'tours' },
+  { id: 'Misc', icon: 'ph-dots-three-circle', labelKey: 'misc' },
 ];
 
+import { useLanguage } from '../contexts/LanguageContext';
+
+
 export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, exchangeRate, users }) => {
+  const { t } = useLanguage();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState<Currency>('VND');
@@ -120,7 +124,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, exchangeRate, u
             type="text"
             value={amount}
             onChange={handleAmountChange}
-            placeholder={currency === 'VND' ? "50,000" : "100"}
+            placeholder={currency === 'VND' ? t('expenses.amount_placeholder') : "100"}
             className="w-full bg-transparent text-2xl font-bold text-slate-800 focus:outline-none placeholder:text-slate-300"
             inputMode="decimal"
           />
@@ -128,7 +132,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, exchangeRate, u
 
         {/* Category Grid */}
         <div className="mb-6">
-          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Category</label>
+          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{t('expenses.category_label')}</label>
           <div className="grid grid-cols-4 gap-2">
             {CATEGORIES.map((cat) => (
               <div key={cat.id} className="relative">
@@ -145,7 +149,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, exchangeRate, u
                   className="flex flex-col items-center justify-center p-2 rounded-xl border border-transparent cursor-pointer transition bg-white/50 hover:bg-white text-slate-400 peer-checked:bg-slate-100 peer-checked:text-sky-500 peer-checked:border-slate-300 peer-checked:shadow-inner"
                 >
                   <i className={`ph-fill ${cat.icon} text-2xl mb-1 transition-transform peer-checked:scale-110`}></i>
-                  <span className="text-[9px] font-bold uppercase">{cat.label}</span>
+                  <span className="text-[9px] font-bold uppercase">{t(`expenses.categories.${cat.labelKey}` as any)}</span>
                 </label>
               </div>
             ))}
@@ -158,7 +162,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, exchangeRate, u
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="What's this for?"
+            placeholder={t('expenses.description_placeholder')}
             className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold focus:outline-none focus:border-sky-500 transition"
           />
 
@@ -195,7 +199,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, exchangeRate, u
 
         <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-2xl shadow-lg shadow-slate-900/20 transition transform active:scale-[0.98] flex items-center justify-center gap-2">
           <i className="ph-bold ph-plus-circle text-xl"></i>
-          <span>Add Expense</span>
+          <span>{t('expenses.add_expense_button')}</span>
         </button>
       </form>
     </section>

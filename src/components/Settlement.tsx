@@ -8,7 +8,10 @@ interface SettlementProps {
   users: User[];
 }
 
+import { useLanguage } from '../contexts/LanguageContext';
+
 export const Settlement: React.FC<SettlementProps> = ({ expenses, exchangeRate, users }) => {
+  const { t } = useLanguage();
   const debts = calculateDebts(users, expenses);
 
   const formatMoney = (amount: number) => {
@@ -21,12 +24,12 @@ export const Settlement: React.FC<SettlementProps> = ({ expenses, exchangeRate, 
         <div className="bg-indigo-100 text-indigo-600 p-2 rounded-full">
           <i className="ph-fill ph-scales text-lg"></i>
         </div>
-        <h2 className="font-bold text-slate-800">Who owes who?</h2>
+        <h2 className="font-bold text-slate-800">{t('expenses.settlement_title')}</h2>
       </div>
 
       <div className="space-y-3">
         {debts.length === 0 ? (
-          <div className="text-center text-slate-400 text-sm py-4">Everything is balanced!</div>
+          <div className="text-center text-slate-400 text-sm py-4">{t('expenses.balanced_message')}</div>
         ) : (
           debts.map((debt, idx) => {
             const fromUser = users.find(u => u.id === debt.from);
@@ -41,7 +44,7 @@ export const Settlement: React.FC<SettlementProps> = ({ expenses, exchangeRate, 
                       {fromUser.avatar.startsWith('data:') ? <img src={fromUser.avatar} className="w-6 h-6 rounded-full" /> : fromUser.avatar}
                     </span>
                   </div>
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Pays</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">{t('expenses.pays_label')}</div>
                   <div className="flex flex-col items-center">
                     <span className="text-xl">
                       {toUser.avatar.startsWith('data:') ? <img src={toUser.avatar} className="w-6 h-6 rounded-full" /> : toUser.avatar}

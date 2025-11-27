@@ -48,6 +48,7 @@ export interface Restaurant {
   location?: string;
   description?: string;
   imageUrl?: string;
+  tiktokUrl?: string;
 }
 
 export interface Activity {
@@ -58,9 +59,17 @@ export interface Activity {
   location?: string;
   startTime: string; // ISO string
   endTime?: string; // ISO string
-  type: 'food' | 'activity' | 'travel' | 'hotel' | 'other';
+  type: 'food' | 'activity' | 'travel' | 'hotel' | 'shopping' | 'other';
   status: 'planned' | 'done';
   notes?: string;
+
+  // Rich UI fields
+  icon?: string; // Phosphor icon class e.g. "ph-airplane-landing"
+  tag?: string; // Custom label e.g. "Must Try", "Michelin"
+  tagColor?: string; // e.g. "red", "blue", "orange"
+  tips?: string; // Helpful tips
+  rating?: number; // 1-5
+  images?: string[]; // URLs
 }
 
 export interface TripData {

@@ -30,7 +30,10 @@ const CAT_COLORS: Record<string, string> = {
   'Misc': '#94A3B8'
 };
 
+import { useLanguage } from '../contexts/LanguageContext';
+
 export const History: React.FC<HistoryProps> = ({ expenses, onDelete, users }) => {
+  const { t } = useLanguage();
   const formatMoney = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount);
   };
@@ -42,7 +45,7 @@ export const History: React.FC<HistoryProps> = ({ expenses, onDelete, users }) =
           <div className="bg-orange-100 text-orange-600 p-2 rounded-full">
             <i className="ph-fill ph-clock-counter-clockwise text-lg"></i>
           </div>
-          <h2 className="font-bold text-slate-800">History</h2>
+          <h2 className="font-bold text-slate-800">{t('expenses.history_title')}</h2>
         </div>
 
         {expenses.length > 0 && (
@@ -53,7 +56,7 @@ export const History: React.FC<HistoryProps> = ({ expenses, onDelete, users }) =
               title="Export to CSV"
             >
               <i className="ph-bold ph-file-csv"></i>
-              CSV
+              {t('expenses.export_csv')}
             </button>
             <button
               onClick={() => exportToExcel(expenses, users)}
@@ -61,7 +64,7 @@ export const History: React.FC<HistoryProps> = ({ expenses, onDelete, users }) =
               title="Export to Excel"
             >
               <i className="ph-bold ph-file-xls"></i>
-              Excel
+              {t('expenses.export_excel')}
             </button>
           </div>
         )}
@@ -69,7 +72,7 @@ export const History: React.FC<HistoryProps> = ({ expenses, onDelete, users }) =
 
       <div className="space-y-4">
         {expenses.length === 0 ? (
-          <div className="text-center text-slate-400 py-8 text-sm opacity-50">Trip is empty. Add something!</div>
+          <div className="text-center text-slate-400 py-8 text-sm opacity-50">{t('expenses.empty_history')}</div>
         ) : (
           expenses.map((exp) => {
             const user = users.find(u => u.id === exp.payerId);
@@ -94,7 +97,7 @@ export const History: React.FC<HistoryProps> = ({ expenses, onDelete, users }) =
                   <div>
                     <div className="font-bold text-slate-700 text-sm leading-tight">{exp.description}</div>
                     <div className="text-[10px] text-slate-400 mt-0.5 font-medium uppercase tracking-wide">
-                      {exp.type === 'SHARED' ? 'Group' : 'Personal'} • {exp.category}
+                      {exp.type === 'SHARED' ? t('expenses.group_label') : t('expenses.personal_label')} • {t(`expenses.categories.${exp.category.toLowerCase()}` as any) || exp.category}
                     </div>
                   </div>
                 </div>

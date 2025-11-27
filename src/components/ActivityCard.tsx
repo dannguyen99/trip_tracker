@@ -108,7 +108,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onEdit, on
         )}
 
         {/* Action Buttons (Visible on Hover) */}
-        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm rounded-lg p-1">
+        <div className="absolute top-2 right-2 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm rounded-lg p-1">
           <button
             onClick={() => onEdit(activity.id)}
             className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition"

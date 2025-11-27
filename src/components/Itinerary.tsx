@@ -210,26 +210,24 @@ export const Itinerary: React.FC<ItineraryProps> = ({ activities, onAdd, onUpdat
             Let the adventure begin! 🇹🇭
           </p>
 
-          {activities.length === 0 ? (
+          {activities.length === 0 && (
             <button
               onClick={handleImportBangkok}
               className="bg-white text-orange-600 hover:bg-orange-50 font-bold py-2 px-6 rounded-full shadow-lg transition transform hover:scale-105 flex items-center gap-2"
             >
               <i className="ph-bold ph-download-simple"></i> {t('itinerary.import_bangkok')}
             </button>
-          ) : (
-            <button
-              onClick={handleClearAll}
-              className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white px-6 py-2 rounded-full font-bold text-sm transition border border-white/20 shadow-lg flex items-center gap-2 mx-auto mb-8"
-            >
-              <i className="ph-bold ph-trash"></i> Clear All ({activities.length})
-            </button>
           )}
 
           {/* Stats Section - Merged into Header */}
           {activities.length > 0 && (
             <div className="text-left text-slate-800">
-              <TripStats activities={activities} startDate={startDate} endDate={endDate} />
+              <TripStats
+                activities={activities}
+                startDate={startDate}
+                endDate={endDate}
+                onClear={handleClearAll}
+              />
             </div>
           )}
         </div>

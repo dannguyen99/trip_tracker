@@ -384,7 +384,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
                     </div>
                     <button
                       onClick={() => onDelete(restaurant.id)}
-                      className="text-slate-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
+                      className="text-slate-300 hover:text-red-500 transition opacity-100 md:opacity-0 md:group-hover:opacity-100"
                     >
                       <i className="ph-bold ph-trash"></i>
                     </button>

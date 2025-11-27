@@ -6,12 +6,14 @@ interface TripStatsProps {
   activities: Activity[];
   startDate?: string | null;
   endDate?: string | null;
+  onClear?: () => void;
 }
 
-export const TripStats: React.FC<TripStatsProps> = ({ activities, startDate, endDate }) => {
+export const TripStats: React.FC<TripStatsProps> = ({ activities, startDate, endDate, onClear }) => {
   const { t } = useLanguage();
 
   const stats = useMemo(() => {
+    // ... (logic remains same)
     // 1. Duration
     let durationDays = 0;
     if (startDate && endDate) {
@@ -76,10 +78,22 @@ export const TripStats: React.FC<TripStatsProps> = ({ activities, startDate, end
 
   return (
     <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 mb-8 max-w-4xl mx-auto relative z-20 -mt-16">
-      <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-        <i className="ph-fill ph-chart-pie-slice text-blue-500"></i>
-        Trip Analysis
-      </h3>
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <i className="ph-fill ph-chart-pie-slice text-blue-500"></i>
+          Trip Analysis
+        </h3>
+        {onClear && (
+          <button
+            onClick={onClear}
+            className="text-slate-400 hover:text-red-500 text-sm font-bold flex items-center gap-1.5 transition px-3 py-1.5 rounded-lg hover:bg-red-50"
+            title={t('itinerary.clear_all')}
+          >
+            <i className="ph-bold ph-trash"></i>
+            <span className="hidden sm:inline">{t('itinerary.clear_all')}</span>
+          </button>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="p-4 bg-slate-50 rounded-2xl text-center">

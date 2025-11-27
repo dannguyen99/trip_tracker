@@ -117,29 +117,32 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
       </div>
 
       {/* Add Button & AI Trigger */}
-      <div className="flex justify-between items-center mb-6">
+      {/* Add Button & AI Trigger */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-3 md:gap-0">
         <button
           onClick={() => setIsAdding(true)}
-          className="bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-slate-800/20 hover:bg-slate-900 transition flex items-center gap-2"
+          className="w-full md:w-auto bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-slate-800/20 hover:bg-slate-900 transition flex items-center justify-center gap-2"
         >
           <i className="ph-bold ph-plus"></i> {t('dining.add_recommendation')}
         </button>
 
-        <button
-          onClick={handleImportCurated}
-          className="bg-white text-orange-600 px-5 py-2.5 rounded-xl font-bold shadow-sm border border-orange-100 hover:bg-orange-50 transition flex items-center gap-2"
-        >
-          <i className="ph-bold ph-download-simple"></i> {t('dining.import_curated_list')}
-        </button>
-
-        {restaurants.length > 0 && (
+        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
           <button
-            onClick={handleClearAll}
-            className="bg-red-50 text-red-500 px-5 py-2.5 rounded-xl font-bold shadow-sm border border-red-100 hover:bg-red-100 transition flex items-center gap-2 ml-2"
+            onClick={handleImportCurated}
+            className="w-full md:w-auto bg-white text-orange-600 px-5 py-2.5 rounded-xl font-bold shadow-sm border border-orange-100 hover:bg-orange-50 transition flex items-center justify-center gap-2"
           >
-            <i className="ph-bold ph-trash"></i> {t('dining.clear_all_restaurants')}
+            <i className="ph-bold ph-download-simple"></i> {t('dining.import_curated_list')}
           </button>
-        )}
+
+          {restaurants.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              className="w-full md:w-auto bg-red-50 text-red-500 px-5 py-2.5 rounded-xl font-bold shadow-sm border border-red-100 hover:bg-red-100 transition flex items-center justify-center gap-2"
+            >
+              <i className="ph-bold ph-trash"></i> {t('dining.clear_all_restaurants')}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Empty State with AI Prompt */}

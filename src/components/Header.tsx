@@ -25,8 +25,8 @@ export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onManageUsers
       <div className="max-w-md mx-auto relative">
 
         {/* Top Nav */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-6 md:gap-0">
+          <div className="flex items-center gap-2 w-full md:w-auto justify-center md:justify-start">
             <button
               onClick={onBack}
               className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition text-white"
@@ -47,33 +47,32 @@ export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onManageUsers
               <span className="text-base">{language === 'en' ? '🇺🇸' : '🇻🇳'}</span>
               <span>{language.toUpperCase()}</span>
             </button>
-            <div onClick={onOpenSetup} className="cursor-pointer group">
-              <h1 className="text-3xl font-extrabold tracking-tight leading-none">{data.name}</h1>
+            <div onClick={onOpenSetup} className="cursor-pointer group text-left">
+              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-none">{data.name}</h1>
               <div className="flex items-center gap-2 text-xs font-medium text-sky-200/80 group-hover:text-white transition">
                 <i className="ph ph-currency-circle-dollar text-lg"></i>
                 <span>1 THB ≈ {Math.round(data.exchangeRate)} VND</span>
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
-            <div className="text-center relative">
+          <div className="flex gap-2 w-full md:w-auto justify-center md:justify-end">
+            <div className="text-center relative w-full md:w-auto">
               <div className="inline-block px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-widest mb-2">
                 {t('header.remaining_budget')}
               </div>
-              <div className={`text-5xl font-extrabold mb-1 tracking-tight ${remaining < 0 ? 'text-red-300' : 'text-white'}`}>
+              <div className={`text-4xl md:text-5xl font-extrabold mb-1 tracking-tight ${remaining < 0 ? 'text-red-300' : 'text-white'}`}>
                 {formatMoney(remaining)}
               </div>
               <div className="text-sm opacity-80">{t('header.spent')}: {formatMoney(totalSpent)}</div>
             </div>
 
             {/* Progress Bar */}
-            <div className="mt-6 relative h-2 bg-slate-900/30 rounded-full overflow-hidden backdrop-blur-sm">
+            <div className="absolute bottom-0 left-0 w-full md:static md:w-auto md:mt-6 h-1.5 md:h-2 bg-slate-900/30 rounded-full overflow-hidden backdrop-blur-sm md:hidden">
               <div
                 className={`absolute top-0 left-0 h-full transition-all duration-1000 ease-out ${percent > 90 ? 'bg-red-500' : 'bg-sky-400'}`}
                 style={{ width: `${percent}%` }}
               ></div>
             </div>
-
           </div>
         </div>
       </div>

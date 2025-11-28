@@ -2,8 +2,8 @@ import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface TabsProps {
-  activeTab: 'expenses' | 'hotels' | 'dining' | 'itinerary';
-  onChange: (tab: 'expenses' | 'hotels' | 'dining' | 'itinerary') => void;
+  activeTab: 'expenses' | 'hotels' | 'dining' | 'itinerary' | 'packing';
+  onChange: (tab: 'expenses' | 'hotels' | 'dining' | 'itinerary' | 'packing') => void;
 }
 
 export const Tabs: React.FC<TabsProps> = ({ activeTab, onChange }) => {
@@ -39,6 +39,13 @@ export const Tabs: React.FC<TabsProps> = ({ activeTab, onChange }) => {
             }`}
         >
           {t('tabs.itinerary')}
+        </button>
+        <button
+          onClick={() => onChange('packing')}
+          className={`px-4 py-2 rounded-lg text-sm font-bold transition ${activeTab === 'packing' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+            }`}
+        >
+          Packing
         </button>
       </div>
     </div>

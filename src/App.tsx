@@ -14,6 +14,8 @@ import { Tabs } from './components/Tabs';
 import { HotelList } from './components/HotelList';
 import { RestaurantList } from './components/RestaurantList';
 import { Itinerary } from './components/Itinerary';
+import { PackingList } from './components/PackingList';
+import { getForecast, type WeatherData } from './services/weather';
 
 import { LanguageProvider } from './contexts/LanguageContext';
 
@@ -23,7 +25,17 @@ function AppContent() {
   const { t } = useLanguage();
   // Simple URL routing for now: ?trip_id=...
   const [tripId, setTripId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'expenses' | 'hotels' | 'dining' | 'itinerary'>('expenses');
+  const [activeTab, setActiveTab] = useState<'expenses' | 'hotels' | 'dining' | 'itinerary' | 'packing'>('expenses');
+  const [weatherForecast, setWeatherForecast] = useState<WeatherData[]>([]);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      // Default to Bangkok coordinates
+      const data = await getForecast(13.7563, 100.5018);
+      setWeatherForecast(data);
+    };
+    fetchWeather();
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -51,7 +63,10 @@ function AppContent() {
     clearRestaurants,
     addActivity,
     updateActivity,
-    deleteActivity
+    deleteActivity,
+    addPackingItem,
+    updatePackingItem,
+    deletePackingItem
   } = useTrip(tripId);
 
   const [isSetupOpen, setIsSetupOpen] = useState(false);
@@ -320,6 +335,17 @@ function AppContent() {
             startDate={trip.startDate}
             endDate={trip.endDate}
             onOpenSetup={() => setIsSetupOpen(true)}
+          />
+        )}
+
+        {activeTab === 'packing' && (
+          <PackingList
+            items={trip.packingItems || []}
+            onAdd={addPackingItem}
+            onUpdate={updatePackingItem}
+            onDelete={deletePackingItem}
+            tripId={trip.id}
+            weatherForecast={weatherForecast}
           />
         )}
 

@@ -74,6 +74,14 @@ export interface Activity {
   images?: string[]; // URLs
 }
 
+export interface PackingItem {
+  id: string;
+  tripId: string;
+  name: string;
+  category: string;
+  isChecked: boolean;
+}
+
 export interface TripData {
   id: string;
   name: string;
@@ -86,6 +94,7 @@ export interface TripData {
   hotels: Hotel[];
   restaurants: Restaurant[];
   activities: Activity[];
+  packingItems: PackingItem[];
 }
 
 export interface AppState {

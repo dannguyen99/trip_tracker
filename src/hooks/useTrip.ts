@@ -78,6 +78,15 @@ export const useTrip = (tripId: string | null) => {
 
       if (activitiesError) throw activitiesError;
 
+      // 7. Fetch Packing Items
+      const { data: packingItemsData, error: packingItemsError } = await supabase
+        .from('packing_items')
+        .select('*')
+        .eq('trip_id', tripId)
+        .order('created_at', { ascending: true });
+
+      if (packingItemsError) throw packingItemsError;
+
       if (isMounted.current) {
         setTrip({
           id: tripData.id,
@@ -149,6 +158,13 @@ export const useTrip = (tripId: string | null) => {
             tips: a.tips,
             rating: a.rating,
             images: a.images
+          })),
+          packingItems: packingItemsData.map((p: any) => ({
+            id: p.id,
+            tripId: p.trip_id,
+            name: p.name,
+            category: p.category,
+            isChecked: p.is_checked
           }))
         });
       }
@@ -171,7 +187,9 @@ export const useTrip = (tripId: string | null) => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'trips', filter: `id=eq.${tripId}` }, () => fetchTrip(false))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'hotels', filter: `trip_id=eq.${tripId}` }, () => fetchTrip(false))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'restaurants', filter: `trip_id=eq.${tripId}` }, () => fetchTrip(false))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'restaurants', filter: `trip_id=eq.${tripId}` }, () => fetchTrip(false))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'activities', filter: `trip_id=eq.${tripId}` }, () => fetchTrip(false))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'packing_items', filter: `trip_id=eq.${tripId}` }, () => fetchTrip(false))
       .subscribe();
 
     return () => {
@@ -399,6 +417,36 @@ export const useTrip = (tripId: string | null) => {
     fetchTrip(false);
   };
 
+  // Packing Item Methods
+  const addPackingItem = async (item: any) => {
+    if (!tripId) return;
+    const { error } = await supabase.from('packing_items').insert({
+      trip_id: tripId,
+      name: item.name,
+      category: item.category,
+      is_checked: item.isChecked
+    });
+    if (error) throw error;
+    fetchTrip(false);
+  };
+
+  const updatePackingItem = async (id: string, updates: any) => {
+    const dbUpdates: any = {};
+    if (updates.name) dbUpdates.name = updates.name;
+    if (updates.category) dbUpdates.category = updates.category;
+    if (updates.isChecked !== undefined) dbUpdates.is_checked = updates.isChecked;
+
+    const { error } = await supabase.from('packing_items').update(dbUpdates).eq('id', id);
+    if (error) throw error;
+    fetchTrip(false);
+  };
+
+  const deletePackingItem = async (id: string) => {
+    const { error } = await supabase.from('packing_items').delete().eq('id', id);
+    if (error) throw error;
+    fetchTrip(false);
+  };
+
   return {
     trip,
     loading,
@@ -418,6 +466,9 @@ export const useTrip = (tripId: string | null) => {
     clearRestaurants,
     addActivity,
     updateActivity,
-    deleteActivity
+    deleteActivity,
+    addPackingItem,
+    updatePackingItem,
+    deletePackingItem
   };
 };

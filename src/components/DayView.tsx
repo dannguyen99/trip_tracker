@@ -1,5 +1,7 @@
 import React from 'react';
 import type { Activity } from '../types';
+import { WeatherWidget } from './WeatherWidget';
+import type { WeatherData } from '../services/weather';
 import { ActivityCard } from './ActivityCard';
 
 interface DayViewProps {
@@ -11,11 +13,12 @@ interface DayViewProps {
   onDelete: (id: string) => void;
   onAdd: () => void;
   currentActivityId?: string | null;
+  weather?: WeatherData;
 }
 
 import { useLanguage } from '../contexts/LanguageContext';
 
-export const DayView: React.FC<DayViewProps> = ({ dayId, date, dayIndex, activities, onEdit, onDelete, onAdd, currentActivityId }) => {
+export const DayView: React.FC<DayViewProps> = ({ dayId, date, dayIndex, activities, onEdit, onDelete, onAdd, currentActivityId, weather }) => {
   const { t, language } = useLanguage();
 
   const formatDate = (date: Date) => {
@@ -28,17 +31,20 @@ export const DayView: React.FC<DayViewProps> = ({ dayId, date, dayIndex, activit
 
   return (
     <section id={dayId} className="scroll-mt-36">
-      <div className="flex items-center gap-3 mb-6">
-        <div className={`text-white w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl shadow-lg ${dayIndex % 3 === 0 ? 'bg-blue-600 shadow-blue-600/20' :
-          dayIndex % 3 === 1 ? 'bg-orange-600 shadow-orange-600/20' :
-            'bg-emerald-600 shadow-emerald-600/20'
-          }`}>
-          {dayIndex + 1}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className={`text-white w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl shadow-lg ${dayIndex % 3 === 0 ? 'bg-blue-600 shadow-blue-600/20' :
+            dayIndex % 3 === 1 ? 'bg-orange-600 shadow-orange-600/20' :
+              'bg-emerald-600 shadow-emerald-600/20'
+            }`}>
+            {dayIndex + 1}
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 capitalize">{getDayTitle()}</h2>
+            <p className="text-sm font-medium text-slate-500">{activities.length} {t('itinerary.activities_planned')}</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 capitalize">{getDayTitle()}</h2>
-          <p className="text-sm font-medium text-slate-500">{activities.length} {t('itinerary.activities_planned')}</p>
-        </div>
+        <WeatherWidget weather={weather} />
       </div>
 
       <div className="relative pl-4 md:pl-6 space-y-6">

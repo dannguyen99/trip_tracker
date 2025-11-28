@@ -5,6 +5,7 @@ import { DayView } from './DayView';
 import { getBangkokPlan } from '../utils/importBangkokPlan';
 import { ActivityModal } from './ActivityModal';
 import { TripStats } from './TripStats';
+import { getForecast, getWeatherForDate, type WeatherData } from '../services/weather';
 
 interface ItineraryProps {
   activities: Activity[];
@@ -23,6 +24,16 @@ export const Itinerary: React.FC<ItineraryProps> = ({ activities, onAdd, onUpdat
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | undefined>(undefined);
   const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>(undefined);
+  const [forecast, setForecast] = useState<WeatherData[]>([]);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      // Default to Bangkok coordinates
+      const data = await getForecast(13.7563, 100.5018);
+      setForecast(data);
+    };
+    fetchWeather();
+  }, []);
 
   // Calculate days based on date range
   const days = useMemo(() => {
@@ -286,6 +297,7 @@ export const Itinerary: React.FC<ItineraryProps> = ({ activities, onAdd, onUpdat
                   onDelete={onDelete}
                   onAdd={() => handleAddActivity(day)}
                   currentActivityId={currentActivityId}
+                  weather={getWeatherForDate(day, forecast)}
                 />
               );
             })

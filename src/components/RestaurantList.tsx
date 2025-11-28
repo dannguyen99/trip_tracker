@@ -4,6 +4,8 @@ import { generateRestaurantRecommendations, isAIEnabled } from '../services/ai';
 import { useLanguage } from '../contexts/LanguageContext';
 import diningImage from '../assets/dining.jpg';
 import { CURATED_RESTAURANTS } from '../data/curatedRestaurants';
+import { RestaurantMap } from './RestaurantMap';
+import { geocodeAddress } from '../services/maps';
 
 interface RestaurantListProps {
   restaurants: Restaurant[];
@@ -18,6 +20,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
   const { t } = useLanguage();
   const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [newRestaurant, setNewRestaurant] = useState({
     name: '',
     cuisine: '',
@@ -30,14 +33,26 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
     notes: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRestaurant.name) return;
+
+    let lat, lng;
+    if (newRestaurant.location) {
+      const coords = await geocodeAddress(newRestaurant.location);
+      if (coords) {
+        lat = coords.lat;
+        lng = coords.lng;
+      }
+    }
+
     onAdd({
       ...newRestaurant,
       tripId,
       isTried: false,
-      rating: newRestaurant.rating ? parseFloat(newRestaurant.rating) : undefined
+      rating: newRestaurant.rating ? parseFloat(newRestaurant.rating) : undefined,
+      latitude: lat,
+      longitude: lng
     });
     setNewRestaurant({
       name: '', cuisine: '', priceRange: '$', location: '', description: '', url: '', tiktokUrl: '', rating: '', notes: ''
@@ -119,12 +134,29 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
       {/* Add Button & AI Trigger */}
       {/* Add Button & AI Trigger */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-3 md:gap-0">
-        <button
-          onClick={() => setIsAdding(true)}
-          className="w-full md:w-auto bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-slate-800/20 hover:bg-slate-900 transition flex items-center justify-center gap-2"
-        >
-          <i className="ph-bold ph-plus"></i> {t('dining.add_recommendation')}
-        </button>
+        <div className="flex gap-3 w-full md:w-auto">
+          <div className="flex bg-slate-100 p-1 rounded-xl">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition ${viewMode === 'list' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <i className="ph-bold ph-list"></i>
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition ${viewMode === 'map' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <i className="ph-bold ph-map-trifold"></i>
+            </button>
+          </div>
+
+          <button
+            onClick={() => setIsAdding(true)}
+            className="flex-1 md:flex-none bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-slate-800/20 hover:bg-slate-900 transition flex items-center justify-center gap-2"
+          >
+            <i className="ph-bold ph-plus"></i> {t('dining.add_recommendation')}
+          </button>
+        </div>
 
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
           <button
@@ -258,166 +290,173 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, onA
         </form>
       )}
 
-      {/* Top Picks Section */}
-      {topPicks.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-            <span className="text-xl">✨</span> {t('dining.ai_top_picks')}
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {topPicks.map((restaurant, index) => (
-              <div
-                key={restaurant.id}
-                className="bg-white p-5 rounded-2xl shadow-lg shadow-indigo-500/5 border border-indigo-50 relative group hover:-translate-y-1 transition duration-300"
-              >
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-t-2xl"></div>
+      {viewMode === 'map' ? (
+        <RestaurantMap restaurants={restaurants} onToggleTried={onToggleTried} />
+      ) : (
+        <>
 
-                <div className="flex flex-col h-full">
-                  <div className="relative">
-                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg border-2 border-white z-10 text-xs">
-                      #{index + 1}
+          {/* Top Picks Section */}
+          {topPicks.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <span className="text-xl">✨</span> {t('dining.ai_top_picks')}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {topPicks.map((restaurant, index) => (
+                  <div
+                    key={restaurant.id}
+                    className="bg-white p-5 rounded-2xl shadow-lg shadow-indigo-500/5 border border-indigo-50 relative group hover:-translate-y-1 transition duration-300"
+                  >
+                    <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-t-2xl"></div>
+
+                    <div className="flex flex-col h-full">
+                      <div className="relative">
+                        <div className="absolute -top-3 -right-3 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg border-2 border-white z-10 text-xs">
+                          #{index + 1}
+                        </div>
+                      </div>
+
+                      <div className="mb-3 mt-2">
+                        <h3 className="font-bold text-lg text-slate-800 leading-tight mb-1">{restaurant.name}</h3>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-indigo-100">
+                            🤖 9{9 - index}% {t('dining.match_label')}
+                          </span>
+                          {restaurant.category && (
+                            <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold border border-orange-100">
+                              {restaurant.category}
+                            </span>
+                          )}
+                          <span className="text-slate-400 font-mono">{restaurant.priceRange}</span>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-slate-500 line-clamp-3 mb-3 h-[3.6em] flex-grow">
+                        {restaurant.description || "No description available."}
+                      </p>
+
+                      <div className="flex justify-between items-center pt-3 border-t border-slate-50 mt-auto">
+                        <button
+                          onClick={() => onToggleTried(restaurant.id, !restaurant.isTried)}
+                          className={`text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5 ${restaurant.isTried
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'
+                            }`}
+                        >
+                          {restaurant.isTried ? (
+                            <>
+                              <i className="ph-fill ph-check-circle text-sm"></i> {t('dining.tried_label')}
+                            </>
+                          ) : (
+                            <>
+                              <i className="ph-bold ph-check-circle text-sm"></i> {t('dining.mark_tried_label')}
+                            </>
+                          )}
+                        </button>
+
+                        {restaurant.url && (
+                          <a
+                            href={restaurant.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-slate-300 hover:text-indigo-500 transition p-1"
+                          >
+                            <i className="ph-fill ph-map-pin text-xl"></i>
+                          </a>
+                        )}
+                        {restaurant.tiktokUrl && (
+                          <a
+                            href={restaurant.tiktokUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-slate-300 hover:text-black transition p-1"
+                          >
+                            <i className="ph-fill ph-tiktok-logo text-xl text-black"></i>
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-                  <div className="mb-3 mt-2">
-                    <h3 className="font-bold text-lg text-slate-800 leading-tight mb-1">{restaurant.name}</h3>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-indigo-100">
-                        🤖 9{9 - index}% {t('dining.match_label')}
-                      </span>
-                      {restaurant.category && (
-                        <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold border border-orange-100">
-                          {restaurant.category}
-                        </span>
-                      )}
-                      <span className="text-slate-400 font-mono">{restaurant.priceRange}</span>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-slate-500 line-clamp-3 mb-3 h-[3.6em] flex-grow">
-                    {restaurant.description || "No description available."}
-                  </p>
-
-                  <div className="flex justify-between items-center pt-3 border-t border-slate-50 mt-auto">
+          {/* Other Spots Section */}
+          {otherSpots.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-8 mb-2">{t('dining.more_gems_title')}</h3>
+              <div className="grid grid-cols-1 gap-3">
+                {otherSpots.map(restaurant => (
+                  <div
+                    key={restaurant.id}
+                    className={`bg-white p-4 rounded-xl shadow-sm border transition flex items-start gap-4 group ${restaurant.isTried ? 'border-green-200 bg-green-50/30' : 'border-slate-100 hover:shadow-md'
+                      }`}
+                  >
                     <button
                       onClick={() => onToggleTried(restaurant.id, !restaurant.isTried)}
-                      className={`text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5 ${restaurant.isTried
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mt-1 transition ${restaurant.isTried
+                        ? 'bg-green-500 border-green-500 text-white'
+                        : 'border-slate-300 text-transparent hover:border-green-400'
                         }`}
                     >
-                      {restaurant.isTried ? (
-                        <>
-                          <i className="ph-fill ph-check-circle text-sm"></i> {t('dining.tried_label')}
-                        </>
-                      ) : (
-                        <>
-                          <i className="ph-bold ph-check-circle text-sm"></i> {t('dining.mark_tried_label')}
-                        </>
-                      )}
+                      <i className="ph-bold ph-check text-xs"></i>
                     </button>
 
-                    {restaurant.url && (
-                      <a
-                        href={restaurant.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-slate-300 hover:text-indigo-500 transition p-1"
-                      >
-                        <i className="ph-fill ph-map-pin text-xl"></i>
-                      </a>
-                    )}
-                    {restaurant.tiktokUrl && (
-                      <a
-                        href={restaurant.tiktokUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-slate-300 hover:text-black transition p-1"
-                      >
-                        <i className="ph-fill ph-tiktok-logo text-xl text-black"></i>
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Other Spots Section */}
-      {otherSpots.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-8 mb-2">{t('dining.more_gems_title')}</h3>
-          <div className="grid grid-cols-1 gap-3">
-            {otherSpots.map(restaurant => (
-              <div
-                key={restaurant.id}
-                className={`bg-white p-4 rounded-xl shadow-sm border transition flex items-start gap-4 group ${restaurant.isTried ? 'border-green-200 bg-green-50/30' : 'border-slate-100 hover:shadow-md'
-                  }`}
-              >
-                <button
-                  onClick={() => onToggleTried(restaurant.id, !restaurant.isTried)}
-                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mt-1 transition ${restaurant.isTried
-                    ? 'bg-green-500 border-green-500 text-white'
-                    : 'border-slate-300 text-transparent hover:border-green-400'
-                    }`}
-                >
-                  <i className="ph-bold ph-check text-xs"></i>
-                </button>
-
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className={`font-bold text-base ${restaurant.isTried ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
-                        {restaurant.name}
-                      </h3>
-                      <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                        {restaurant.rating && <span className="text-orange-500 font-bold">⭐ {restaurant.rating}</span>}
-                        {restaurant.category && <span>• {restaurant.category}</span>}
-                        {restaurant.category && <span>• {restaurant.category}</span>}
-                        {restaurant.cuisine && <span>• {restaurant.cuisine}</span>}
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className={`font-bold text-base ${restaurant.isTried ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
+                            {restaurant.name}
+                          </h3>
+                          <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                            {restaurant.rating && <span className="text-orange-500 font-bold">⭐ {restaurant.rating}</span>}
+                            {restaurant.category && <span>• {restaurant.category}</span>}
+                            {restaurant.category && <span>• {restaurant.category}</span>}
+                            {restaurant.cuisine && <span>• {restaurant.cuisine}</span>}
+                          </div>
+                          {restaurant.description && (
+                            <p className="text-xs text-slate-500 mt-1 line-clamp-2">{restaurant.description}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => onDelete(restaurant.id)}
+                          className="text-slate-300 hover:text-red-500 transition opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                        >
+                          <i className="ph-bold ph-trash"></i>
+                        </button>
                       </div>
-                      {restaurant.description && (
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">{restaurant.description}</p>
+
+                      {restaurant.url && (
+                        <a
+                          href={restaurant.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-sky-500 mt-2 hover:underline"
+                        >
+                          <i className="ph-bold ph-map-pin"></i> {t('dining.view_map_label')}
+                        </a>
+                      )}
+                      {restaurant.tiktokUrl && (
+                        <a
+                          href={restaurant.tiktokUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-black mt-2 hover:underline ml-3"
+                        >
+                          <i className="ph-bold ph-tiktok-logo"></i> {t('dining.tiktok_link')}
+                        </a>
                       )}
                     </div>
-                    <button
-                      onClick={() => onDelete(restaurant.id)}
-                      className="text-slate-300 hover:text-red-500 transition opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                    >
-                      <i className="ph-bold ph-trash"></i>
-                    </button>
                   </div>
-
-                  {restaurant.url && (
-                    <a
-                      href={restaurant.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-bold text-sky-500 mt-2 hover:underline"
-                    >
-                      <i className="ph-bold ph-map-pin"></i> {t('dining.view_map_label')}
-                    </a>
-                  )}
-                  {restaurant.tiktokUrl && (
-                    <a
-                      href={restaurant.tiktokUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-bold text-black mt-2 hover:underline ml-3"
-                    >
-                      <i className="ph-bold ph-tiktok-logo"></i> {t('dining.tiktok_link')}
-                    </a>
-                  )}
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          )}
+
+
+        </>
       )}
-
-
     </div>
   );
 };

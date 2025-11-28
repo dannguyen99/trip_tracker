@@ -49,6 +49,8 @@ export interface Restaurant {
   description?: string;
   imageUrl?: string;
   tiktokUrl?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Activity {

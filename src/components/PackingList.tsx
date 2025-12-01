@@ -6,6 +6,7 @@ import { generatePackingSuggestions, type AISuggestion } from '../services/ai';
 import type { TripData } from '../types';
 import packingHero from '../assets/packing_hero.png';
 import emptyPacking from '../assets/empty_packing.png';
+import { useAuth } from '../contexts/AuthContext';
 
 interface PackingListProps {
   items: PackingItem[];
@@ -24,27 +25,44 @@ const CATEGORIES = ['All', 'Essentials', 'Clothing', 'Toiletries', 'Tech', 'Docu
 
 export const PackingList: React.FC<PackingListProps> = ({ items, users, onAdd, onUpdate, onDelete, onClearAll, tripId, tripData, weatherForecast }) => {
   const { t, language } = useLanguage();
+  const { user: currentUser } = useAuth();
   const [activeCategory, setActiveCategory] = useState('All');
   const [newItemName, setNewItemName] = useState('');
-  const [filterMyItems, setFilterMyItems] = useState(false);
+  const [filterMode, setFilterMode] = useState<'all' | 'my_private' | 'group'>('all');
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [isPrivateNewItem, setIsPrivateNewItem] = useState(false);
 
   // AI State
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(new Set());
+  const [addAiAsPrivate, setAddAiAsPrivate] = useState(false);
 
-  // Mock current user ID for demo purposes (usually would come from auth context)
-  const currentUserId = "0"; // Assuming "Duy Bảo" is the current user
+  // Find current user's member ID
+  const currentMemberId = useMemo(() => {
+    if (!currentUser) return null;
+    const member = users.find(u => u.userId === currentUser.id);
+    return member ? member.id : null;
+  }, [currentUser, users]);
 
   const filteredItems = useMemo(() => {
     return items.filter(item => {
       const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
-      const matchesUser = filterMyItems ? (item.assignedTo === currentUserId || !item.assignedTo) : true;
-      return matchesCategory && matchesUser;
+
+      let matchesFilter = true;
+      if (filterMode === 'my_private') {
+        // Show only items assigned to me AND are private
+        matchesFilter = item.assignedTo === currentMemberId && item.isPrivate === true;
+      } else if (filterMode === 'group') {
+        // Show only items NOT private (Group or Public Personal)
+        matchesFilter = !item.isPrivate;
+      }
+      // 'all' shows everything (that RLS allows us to see)
+
+      return matchesCategory && matchesFilter;
     });
-  }, [items, activeCategory, filterMyItems]);
+  }, [items, activeCategory, filterMode, currentMemberId]);
 
   const progress = useMemo(() => {
     if (items.length === 0) return 0;
@@ -60,9 +78,12 @@ export const PackingList: React.FC<PackingListProps> = ({ items, users, onAdd, o
       tripId,
       name: newItemName.trim(),
       category: activeCategory,
-      isChecked: false
+      isChecked: false,
+      assignedTo: isPrivateNewItem ? currentMemberId || undefined : undefined,
+      isPrivate: isPrivateNewItem
     });
     setNewItemName('');
+    setIsPrivateNewItem(false);
   };
 
   const handleImportTemplate = (type: 'city' | 'beach') => {
@@ -175,7 +196,10 @@ export const PackingList: React.FC<PackingListProps> = ({ items, users, onAdd, o
         tripId,
         name: s.name,
         category: s.category,
-        isChecked: false
+        isChecked: false,
+        assignedTo: addAiAsPrivate ? currentMemberId || undefined : undefined,
+        isPrivate: addAiAsPrivate,
+        description: s.reason
       });
     });
     setIsAIModalOpen(false);
@@ -250,20 +274,33 @@ export const PackingList: React.FC<PackingListProps> = ({ items, users, onAdd, o
             </div>
 
             {!isGenerating && aiSuggestions.length > 0 && (
-              <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-                <button
-                  onClick={() => setIsAIModalOpen(false)}
-                  className="px-4 py-2 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition"
-                >
-                  {t('packing.ai.cancel')}
-                </button>
-                <button
-                  onClick={handleAddSelectedSuggestions}
-                  disabled={selectedSuggestions.size === 0}
-                  className="px-6 py-2 rounded-xl font-bold bg-slate-800 text-white hover:bg-slate-900 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-800/20"
-                >
-                  {t('packing.ai.add_items').replace('{{count}}', selectedSuggestions.size.toString())}
-                </button>
+              <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-col gap-3">
+                {currentMemberId && (
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-600 cursor-pointer self-end">
+                    <input
+                      type="checkbox"
+                      checked={addAiAsPrivate}
+                      onChange={(e) => setAddAiAsPrivate(e.target.checked)}
+                      className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+                    />
+                    {t('packing.ai.add_as_private')}
+                  </label>
+                )}
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setIsAIModalOpen(false)}
+                    className="px-4 py-2 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition"
+                  >
+                    {t('packing.ai.cancel')}
+                  </button>
+                  <button
+                    onClick={handleAddSelectedSuggestions}
+                    disabled={selectedSuggestions.size === 0}
+                    className="px-6 py-2 rounded-xl font-bold bg-slate-800 text-white hover:bg-slate-900 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-800/20"
+                  >
+                    {t('packing.ai.add_items').replace('{{count}}', selectedSuggestions.size.toString())}
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -326,16 +363,22 @@ export const PackingList: React.FC<PackingListProps> = ({ items, users, onAdd, o
             )}
             <span className="text-sm font-bold text-slate-500">{t('packing.show_label')}</span>
             <button
-              onClick={() => setFilterMyItems(false)}
-              className={`px-3 py-1 rounded-lg text-sm font-bold transition ${!filterMyItems ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}
+              onClick={() => setFilterMode('all')}
+              className={`px-3 py-1 rounded-lg text-sm font-bold transition ${filterMode === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}
             >
               {t('packing.all')}
             </button>
             <button
-              onClick={() => setFilterMyItems(true)}
-              className={`px-3 py-1 rounded-lg text-sm font-bold transition ${filterMyItems ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}
+              onClick={() => setFilterMode('group')}
+              className={`px-3 py-1 rounded-lg text-sm font-bold transition ${filterMode === 'group' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}
             >
-              {t('packing.my_items')}
+              {t('packing.group')}
+            </button>
+            <button
+              onClick={() => setFilterMode('my_private')}
+              className={`px-3 py-1 rounded-lg text-sm font-bold transition ${filterMode === 'my_private' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}
+            >
+              {t('packing.private')}
             </button>
           </div>
         </div>
@@ -381,18 +424,31 @@ export const PackingList: React.FC<PackingListProps> = ({ items, users, onAdd, o
       <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden min-h-[400px]">
         {/* Add Item */}
         {activeCategory !== 'All' && (
-          <form onSubmit={handleAddItem} className="p-4 border-b border-slate-100 flex gap-2">
-            <input
-              type="text"
-              value={newItemName}
-              onChange={(e) => setNewItemName(e.target.value)}
-              placeholder={t('packing.add_placeholder').replace('{{category}}', t(`packing.categories.${activeCategory}`) || activeCategory)}
-              className="flex-1 bg-slate-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-slate-200 transition"
-            />
+          <form onSubmit={handleAddItem} className="p-4 border-b border-slate-100 flex gap-2 items-center">
+            <div className="flex-1 flex gap-2">
+              <input
+                type="text"
+                value={newItemName}
+                onChange={(e) => setNewItemName(e.target.value)}
+                placeholder={t('packing.add_placeholder').replace('{{category}}', t(`packing.categories.${activeCategory}`) || activeCategory)}
+                className="flex-1 bg-slate-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-slate-200 transition"
+              />
+              {currentMemberId && (
+                <button
+                  type="button"
+                  onClick={() => setIsPrivateNewItem(!isPrivateNewItem)}
+                  className={`px-3 rounded-xl font-bold text-xs flex items-center gap-1 transition ${isPrivateNewItem ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-400'}`}
+                  title={t('packing.private_hint')}
+                >
+                  {isPrivateNewItem ? <i className="ph-fill ph-lock-key"></i> : <i className="ph-bold ph-lock-open"></i>}
+                  {isPrivateNewItem ? t('packing.private') : t('packing.public')}
+                </button>
+              )}
+            </div>
             <button
               type="submit"
               disabled={!newItemName.trim()}
-              className="bg-slate-800 text-white px-4 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-900 transition"
+              className="bg-slate-800 text-white px-4 py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-900 transition"
             >
               <i className="ph-bold ph-plus"></i>
             </button>
@@ -411,7 +467,7 @@ export const PackingList: React.FC<PackingListProps> = ({ items, users, onAdd, o
             </div>
           ) : (
             filteredItems.map((item, index) => (
-              <div key={item.id} className="flex items-center p-4 hover:bg-slate-50 transition group">
+              <div key={item.id} className={`flex items-center p-4 hover:bg-slate-50 transition group ${item.isPrivate ? 'bg-amber-50/50' : ''}`}>
                 <button
                   onClick={() => onUpdate(item.id, { isChecked: !item.isChecked })}
                   className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center mr-4 transition ${item.isChecked
@@ -421,9 +477,19 @@ export const PackingList: React.FC<PackingListProps> = ({ items, users, onAdd, o
                 >
                   <i className="ph-bold ph-check text-xs"></i>
                 </button>
-                <span className={`flex-1 font-medium ${item.isChecked ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-                  {item.name}
-                </span>
+                <div className="flex-1 flex items-center gap-2">
+                  <div className="flex flex-col">
+                    <span className={`font-medium ${item.isChecked ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                      {item.name}
+                    </span>
+                    {item.description && (
+                      <span className="text-xs text-slate-500">{item.description}</span>
+                    )}
+                  </div>
+                  {item.isPrivate && (
+                    <i className="ph-fill ph-lock-key text-amber-400 text-xs ml-2" title="Private Item"></i>
+                  )}
+                </div>
 
                 {/* Assignee Avatar */}
                 <div className="relative mr-2">
@@ -456,7 +522,7 @@ export const PackingList: React.FC<PackingListProps> = ({ items, users, onAdd, o
                         <div className="text-xs font-bold text-slate-400 px-2 py-1 uppercase">{t('packing.assign_to')}</div>
                         <button
                           onClick={() => {
-                            onUpdate(item.id, { assignedTo: undefined });
+                            onUpdate(item.id, { assignedTo: undefined, isPrivate: false });
                             setOpenDropdownId(null);
                           }}
                           className="w-full text-left px-2 py-2 rounded-lg hover:bg-slate-50 text-sm font-medium text-slate-600 flex items-center gap-3"
@@ -469,7 +535,12 @@ export const PackingList: React.FC<PackingListProps> = ({ items, users, onAdd, o
                             <button
                               key={user.id}
                               onClick={() => {
-                                onUpdate(item.id, { assignedTo: user.id });
+                                // If assigning to someone else, force private to false (unless it's me)
+                                const isMe = user.id === currentMemberId;
+                                onUpdate(item.id, {
+                                  assignedTo: user.id,
+                                  isPrivate: isMe ? item.isPrivate : false
+                                });
                                 setOpenDropdownId(null);
                               }}
                               className={`w-full text-left px-2 py-2 rounded-lg hover:bg-slate-50 text-sm font-medium flex items-center gap-3 ${item.assignedTo === user.id ? 'bg-sky-50 text-sky-600' : 'text-slate-700'}`}
@@ -485,6 +556,24 @@ export const PackingList: React.FC<PackingListProps> = ({ items, users, onAdd, o
                             </button>
                           );
                         })}
+
+                        {/* Private Toggle in Dropdown (Only if assigned to me) */}
+                        {item.assignedTo === currentMemberId && (
+                          <div className="mt-2 pt-2 border-t border-slate-100">
+                            <button
+                              onClick={() => {
+                                onUpdate(item.id, { isPrivate: !item.isPrivate });
+                                setOpenDropdownId(null);
+                              }}
+                              className="w-full text-left px-2 py-2 rounded-lg hover:bg-amber-50 text-sm font-medium text-amber-700 flex items-center gap-3"
+                            >
+                              <span className="w-6 text-center flex justify-center">
+                                {item.isPrivate ? <i className="ph-fill ph-lock-key"></i> : <i className="ph-bold ph-lock-open"></i>}
+                              </span>
+                              {item.isPrivate ? t('packing.make_public') : t('packing.make_private')}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </>
                   )}

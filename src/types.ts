@@ -82,7 +82,9 @@ export interface PackingItem {
   name: string;
   category: string;
   isChecked: boolean;
-  assignedTo?: string; // ID of the trip member
+  assignedTo?: string; // userId of the assignee
+  isPrivate?: boolean;
+  description?: string;
 }
 
 export interface TripData {

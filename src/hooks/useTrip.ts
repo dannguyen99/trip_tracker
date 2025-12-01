@@ -168,13 +168,15 @@ export const useTrip = (tripId: string | null) => {
             rating: a.rating,
             images: a.images
           })),
-          packingItems: packingItemsData.map((p: any) => ({
-            id: p.id,
-            tripId: p.trip_id,
-            name: p.name,
-            category: p.category,
-            isChecked: p.is_checked,
-            assignedTo: p.assigned_to
+          packingItems: packingItemsData.map((item: any) => ({
+            id: item.id,
+            tripId: item.trip_id,
+            name: item.name,
+            category: item.category,
+            isChecked: item.is_checked,
+            assignedTo: item.assigned_to,
+            isPrivate: item.is_private,
+            description: item.description
           }))
         });
       }
@@ -446,7 +448,9 @@ export const useTrip = (tripId: string | null) => {
       name: item.name,
       category: item.category,
       is_checked: item.isChecked,
-      assigned_to: item.assignedTo
+      assigned_to: item.assignedTo,
+      is_private: item.isPrivate,
+      description: item.description
     });
     if (error) throw error;
     fetchTrip(false);
@@ -460,11 +464,14 @@ export const useTrip = (tripId: string | null) => {
           name: updates.name,
           category: updates.category,
           is_checked: updates.isChecked,
-          assigned_to: updates.assignedTo
+          assigned_to: updates.assignedTo,
+          is_private: updates.isPrivate,
+          description: updates.description
         })
         .eq('id', itemId);
 
       if (error) throw error;
+      fetchTrip(false);
     } catch (err) {
       console.error('Error updating packing item:', err);
       throw err;

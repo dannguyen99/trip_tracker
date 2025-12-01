@@ -20,6 +20,12 @@ export const vi: Dictionary = {
     show_label: 'Hiển thị:',
     all: 'Tất cả',
     my_items: 'Của tôi',
+    group: 'Nhóm',
+    private: 'Riêng tư',
+    public: 'Công khai',
+    make_public: 'Công khai',
+    make_private: 'Riêng tư',
+    private_hint: 'Đồ riêng tư chỉ bạn mới thấy được',
     categories: {
       All: 'Tất cả',
       Essentials: 'Thiết yếu',
@@ -37,6 +43,7 @@ export const vi: Dictionary = {
       no_suggestions: 'Không tìm thấy gợi ý nào. Có vẻ bạn đã chuẩn bị đủ! 🎉',
       cancel: 'Hủy',
       add_items: 'Thêm {{count}} món',
+      add_as_private: 'Thêm vào đồ riêng',
       error: 'Không thể tạo gợi ý. Vui lòng kiểm tra khóa API.'
     },
     clear_all: 'Xóa tất cả',

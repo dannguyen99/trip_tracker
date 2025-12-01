@@ -17,6 +17,12 @@ export const en = {
     show_label: 'Show:',
     all: 'All',
     my_items: 'My Items',
+    group: 'Group',
+    private: 'Private',
+    public: 'Public',
+    make_public: 'Make Public',
+    make_private: 'Make Private',
+    private_hint: 'Private items are only visible to you',
     categories: {
       All: 'All',
       Essentials: 'Essentials',
@@ -34,6 +40,7 @@ export const en = {
       no_suggestions: 'No suggestions found. You might be fully packed! 🎉',
       cancel: 'Cancel',
       add_items: 'Add {{count}} Items',
+      add_as_private: 'Add as private items',
       error: 'Failed to generate suggestions. Please check your API key.'
     },
     clear_all: 'Clear All',

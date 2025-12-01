@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Expense, TripData, PackingItem } from '../types';
-import { DEFAULT_USERS } from '../types';
 
 export const useTrip = (tripId: string | null) => {
   const [trip, setTrip] = useState<TripData | null>(null);
@@ -35,15 +34,21 @@ export const useTrip = (tripId: string | null) => {
 
       if (tripError) throw tripError;
 
-      // 2. Fetch Members
+      // 3. Fetch Members with Profiles
       const { data: membersData, error: membersError } = await supabase
         .from('trip_members')
-        .select('*')
+        .select(`
+          *,
+          profiles (
+            full_name,
+            avatar_url
+          )
+        `)
         .eq('trip_id', tripId);
 
       if (membersError) throw membersError;
 
-      // 3. Fetch Expenses
+      // 3.5 Fetch Expenses
       const { data: expensesData, error: expensesError } = await supabase
         .from('expenses')
         .select('*')
@@ -92,17 +97,20 @@ export const useTrip = (tripId: string | null) => {
         setTrip({
           id: tripData.id,
           name: tripData.name,
+          isPublic: tripData.is_public,
           totalBudgetVND: tripData.total_budget_vnd,
           exchangeRate: tripData.exchange_rate,
           startDate: tripData.start_date,
           endDate: tripData.end_date,
           users: membersData.map((m: any) => ({
             id: m.id,
-            name: m.name,
-            avatar: m.avatar,
-            color: m.color,
-            bg: m.bg,
-            border: m.border
+            userId: m.user_id,
+            // Use profile data if available, otherwise fallback to member data
+            name: m.profiles?.full_name || m.name || 'Unknown',
+            avatar: m.profiles?.avatar_url || m.avatar || '👤',
+            color: m.color || '#3B82F6',
+            bg: m.bg || 'bg-blue-100',
+            border: m.border || 'border-blue-500'
           })),
           expenses: expensesData.map((e: any) => ({
             id: e.id,
@@ -302,18 +310,20 @@ export const useTrip = (tripId: string | null) => {
 
     if (tripError) throw tripError;
 
-    // 2. Add Default Members
-    const members = DEFAULT_USERS.map(u => ({
-      trip_id: trip.id,
-      name: u.name,
-      avatar: u.avatar,
-      color: u.color,
-      bg: u.bg,
-      border: u.border
-    }));
+    // 2. Add Current User as Member
+    const { error: memberError } = await supabase
+      .from('trip_members')
+      .insert({
+        trip_id: trip.id,
+        user_id: user.id,
+        name: user.user_metadata.full_name || user.email?.split('@')[0] || 'Me',
+        avatar: user.user_metadata.avatar_url || '👤',
+        color: '#3B82F6', // Default blue
+        bg: 'bg-blue-100',
+        border: 'border-blue-500'
+      });
 
-    const { error: membersError } = await supabase.from('trip_members').insert(members);
-    if (membersError) throw membersError;
+    if (memberError) throw memberError;
 
     return trip.id;
   };
@@ -357,7 +367,7 @@ export const useTrip = (tripId: string | null) => {
     fetchTrip(false);
   };
 
-  const updateTripSettings = async (totalBudgetVND: number, exchangeRate: number, startDate?: string | null, endDate?: string | null) => {
+  const updateTripSettings = async (totalBudgetVND: number, exchangeRate: number, startDate?: string | null, endDate?: string | null, isPublic?: boolean) => {
     if (!tripId) return;
     const updates: any = {
       total_budget_vnd: totalBudgetVND,
@@ -365,6 +375,7 @@ export const useTrip = (tripId: string | null) => {
     };
     if (startDate !== undefined) updates.start_date = startDate;
     if (endDate !== undefined) updates.end_date = endDate;
+    if (isPublic !== undefined) updates.is_public = isPublic;
 
     const { error } = await supabase.from('trips').update(updates).eq('id', tripId);
     if (error) throw error;

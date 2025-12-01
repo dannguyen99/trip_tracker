@@ -1,6 +1,5 @@
 import React from 'react';
 import type { TripData } from '../types';
-
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface HeaderProps {
@@ -11,10 +10,13 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onManageUsers, onBack }) => {
-  const { t, language, setLanguage } = useLanguage();
+  const { t } = useLanguage();
+
   const totalSpent = data.expenses.reduce((sum, e) => sum + e.amountVND, 0);
   const remaining = data.totalBudgetVND - totalSpent;
   const percent = data.totalBudgetVND > 0 ? Math.min((totalSpent / data.totalBudgetVND) * 100, 100) : 0;
+
+
 
   const formatMoney = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount);
@@ -30,24 +32,20 @@ export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onManageUsers
             <button
               onClick={onBack}
               className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition text-white"
+              title="Back to Dashboard"
             >
               <i className="ph-bold ph-arrow-left text-lg"></i>
             </button>
+
             <button
               onClick={onManageUsers}
               className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition text-white"
+              title="Trip Members"
             >
               <i className="ph-bold ph-users"></i>
             </button>
-            <button
-              onClick={() => setLanguage(language === 'en' ? 'vi' : 'en')}
-              className="h-10 px-3 rounded-full bg-white/10 backdrop-blur-md flex items-center gap-2 hover:bg-white/20 transition text-white font-bold text-xs border border-white/10"
-              title={language === 'en' ? 'Switch to Vietnamese' : 'Switch to English'}
-            >
-              <span className="text-base">{language === 'en' ? '🇺🇸' : '🇻🇳'}</span>
-              <span>{language.toUpperCase()}</span>
-            </button>
-            <div onClick={onOpenSetup} className="cursor-pointer group text-left">
+
+            <div onClick={onOpenSetup} className="cursor-pointer group text-left ml-2">
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-none">{data.name}</h1>
               <div className="flex items-center gap-2 text-xs font-medium text-sky-200/80 group-hover:text-white transition">
                 <i className="ph ph-currency-circle-dollar text-lg"></i>
@@ -55,6 +53,7 @@ export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onManageUsers
               </div>
             </div>
           </div>
+
           <div className="flex gap-2 w-full md:w-auto justify-center md:justify-end">
             <div className="text-center relative w-full md:w-auto">
               <div className="inline-block px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-widest mb-2">

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { UserProfile } from './components/Profile/UserProfile';
 import { useTrip } from './hooks/useTrip';
 import { useAllTrips } from './hooks/useAllTrips';
 import heroImage from './assets/landing_hero.png';
-import desktopBg from './assets/desktop_bg.png';
+
 import { Header } from './components/Header';
 import { SetupModal } from './components/SetupModal';
 import { ExpenseForm } from './components/ExpenseForm';
@@ -27,10 +29,27 @@ import { Auth } from './components/Auth/Auth';
 
 function AppContent() {
   const { user, loading: authLoading } = useAuth();
-  const { t } = useLanguage();
+  const { t, setLanguage } = useLanguage();
+  const navigate = useNavigate();
   // Simple URL routing for now: ?trip_id=...
   const [tripId, setTripId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'expenses' | 'hotels' | 'dining' | 'itinerary' | 'packing'>('expenses');
+
+  // Sync language from profile on login
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('profiles')
+        .select('language')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.language) {
+            setLanguage(data.language as 'en' | 'vi');
+          }
+        });
+    }
+  }, [user, setLanguage]);
   const [weatherForecast, setWeatherForecast] = useState<WeatherData[]>([]);
 
   useEffect(() => {
@@ -99,9 +118,9 @@ function AppContent() {
     }
   };
 
-  const handleSaveSetup = async (vnd: number, thb: number, startDate: string, endDate: string) => {
+  const handleSaveSetup = async (vnd: number, thb: number, startDate: string, endDate: string, isPublic: boolean) => {
     try {
-      await updateTripSettings(vnd, vnd / thb, startDate, endDate);
+      await updateTripSettings(vnd, vnd / thb, startDate, endDate, isPublic);
       setIsSetupOpen(false);
     } catch (err) {
       console.error(err);
@@ -117,7 +136,10 @@ function AppContent() {
     );
   }
 
-  if (!user) {
+  // If user is not logged in, we only allow access if there is a tripId (Public Access check)
+  // If no tripId, force Auth.
+  // If tripId exists but access is denied (handled by useTrip error), we might want to show Auth then.
+  if (!user && !tripId) {
     return <Auth />;
   }
 
@@ -127,6 +149,11 @@ function AppContent() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
       </div>
     );
+  }
+
+  // If we have an error and no user, it likely means access denied to private trip -> Show Auth
+  if (error && !user) {
+    return <Auth />;
   }
 
   if (error) {
@@ -149,10 +176,7 @@ function AppContent() {
 
   if (!tripId || !trip) {
     return (
-      <div
-        className="min-h-screen bg-slate-50 bg-cover bg-center bg-no-repeat bg-fixed flex items-center justify-center"
-        style={{ backgroundImage: `url(${desktopBg})` }}
-      >
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md mx-auto min-h-screen sm:min-h-[85vh] sm:h-auto sm:rounded-[2.5rem] flex flex-col bg-white/95 backdrop-blur-sm shadow-2xl overflow-hidden relative sm:my-8 transition-all duration-500">
 
           {/* Hero Section */}
@@ -163,8 +187,13 @@ function AppContent() {
               <h1 className="text-3xl font-extrabold text-slate-800">{t('hero.title')}</h1>
               <p className="text-slate-600 font-medium">{t('hero.subtitle')}</p>
             </div>
-            <div className="absolute top-4 right-4">
-              <button onClick={() => supabase.auth.signOut()} className="bg-white/50 hover:bg-white/80 p-2 rounded-full text-xs font-bold transition">Sign Out</button>
+            <div className="absolute top-4 right-4 flex gap-2">
+              <button
+                onClick={() => navigate('/profile')}
+                className="bg-white/50 hover:bg-white/80 p-2 rounded-full text-xs font-bold transition flex items-center gap-1"
+              >
+                <span>👤</span> Profile
+              </button>
             </div>
           </div>
 
@@ -264,6 +293,7 @@ function AppContent() {
         initialTHB={trip.totalBudgetVND > 0 ? Math.round(trip.totalBudgetVND / trip.exchangeRate) : 0}
         initialStartDate={trip.startDate}
         initialEndDate={trip.endDate}
+        initialIsPublic={trip.isPublic}
       />
 
       {/* User Management */}
@@ -381,13 +411,21 @@ function AppContent() {
   );
 }
 
+
+
 function App() {
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </LanguageProvider>
+    <Router>
+      <LanguageProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/*" element={<AppContent />} />
+          </Routes>
+        </AuthProvider>
+      </LanguageProvider>
+    </Router>
   );
 }
+
 export default App;

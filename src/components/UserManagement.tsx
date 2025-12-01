@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import type { User } from '../types';
 import { resizeImage } from '../utils/imageUtils';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface UserManagementProps {
   users: User[];
@@ -14,6 +15,7 @@ interface UserManagementProps {
 const AVATAR_OPTIONS = ["👨🏻", "👩🏻", "👨🏼", "👩🏼", "🧑🏽", "👱🏻‍♂️", "👴🏻", "👵🏻", "🦁", "🐯", "🐶", "🐱"];
 
 export const UserManagement: React.FC<UserManagementProps> = ({ users, onAddUser, onEditUser, onDeleteUser, isOpen, onClose }) => {
+  const { t } = useLanguage();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState(AVATAR_OPTIONS[0]);
@@ -64,7 +66,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, onAddUser
       <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden max-h-[90vh] overflow-y-auto">
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 to-pink-500"></div>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-slate-800">Manage Friends</h2>
+          <h2 className="text-2xl font-bold text-slate-800">{t('user_management.title')}</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">✕</button>
         </div>
 
@@ -83,8 +85,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, onAddUser
                 <span className="font-bold text-slate-700">{user.name}</span>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => startEdit(user)} className="text-xs font-bold text-sky-500 hover:text-sky-700 px-2 py-1 bg-sky-50 rounded-lg">EDIT</button>
-                <button onClick={() => onDeleteUser(user.id)} className="text-xs font-bold text-red-500 hover:text-red-700 px-2 py-1 bg-red-50 rounded-lg">DEL</button>
+                {user.userId ? (
+                  <div className="px-2 py-1 bg-slate-100 rounded-lg text-slate-400 text-xs font-bold flex items-center gap-1 cursor-help" title={t('user_management.linked_desc')}>
+                    <span>🔒</span>
+                    <span className="hidden sm:inline">{t('user_management.linked')}</span>
+                  </div>
+                ) : (
+                  <button onClick={() => startEdit(user)} className="text-xs font-bold text-sky-500 hover:text-sky-700 px-2 py-1 bg-sky-50 rounded-lg">{t('common.edit')}</button>
+                )}
+                <button onClick={() => onDeleteUser(user.id)} className="text-xs font-bold text-red-500 hover:text-red-700 px-2 py-1 bg-red-50 rounded-lg">{t('common.delete')}</button>
               </div>
             </div>
           ))}
@@ -92,10 +101,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, onAddUser
 
         {/* Add/Edit Form */}
         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-          <h3 className="text-sm font-bold text-slate-400 uppercase mb-3">{editingId !== null ? 'Edit Friend' : 'Add New Friend'}</h3>
+          <h3 className="text-sm font-bold text-slate-400 uppercase mb-3">{editingId !== null ? t('user_management.edit_friend') : t('user_management.add_new')}</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Name</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">{t('user_management.name')}</label>
               <input
                 type="text"
                 value={name}
@@ -106,14 +115,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, onAddUser
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Avatar</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">{t('user_management.avatar')}</label>
               <div className="flex gap-2 mb-2">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-xl text-xs font-bold hover:bg-slate-100 transition"
                 >
-                  📸 Upload Photo
+                  📸 {t('user_management.upload_photo')}
                 </button>
                 <input
                   type="file"
@@ -147,10 +156,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, onAddUser
 
             <div className="flex gap-2 pt-2">
               {editingId !== null && (
-                <button type="button" onClick={cancelEdit} className="flex-1 py-3 rounded-xl font-bold text-slate-500 bg-white border border-slate-200 hover:bg-slate-50">Cancel</button>
+                <button type="button" onClick={cancelEdit} className="flex-1 py-3 rounded-xl font-bold text-slate-500 bg-white border border-slate-200 hover:bg-slate-50">{t('common.cancel')}</button>
               )}
               <button type="submit" className="flex-1 bg-slate-800 hover:bg-black text-white py-3 rounded-xl font-bold shadow-lg transition">
-                {editingId !== null ? 'Save Changes' : 'Add Friend'}
+                {editingId !== null ? t('user_management.save_changes') : t('user_management.add_friend')}
               </button>
             </div>
           </form>

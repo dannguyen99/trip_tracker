@@ -4,6 +4,7 @@ export type Category = 'Food' | 'Transport' | 'Hotel' | 'Fun' | 'Misc' | 'Shoppi
 
 export interface User {
   id: string;
+  userId?: string; // Links to profiles.id if registered
   name: string;
   avatar: string;
   color: string;
@@ -98,6 +99,7 @@ export interface TripData {
   activities: Activity[];
   packingItems: PackingItem[];
   ownerId?: string;
+  isPublic?: boolean;
 }
 
 export interface AppState {
@@ -105,9 +107,4 @@ export interface AppState {
   activeTripId: string | null;
 }
 
-export const DEFAULT_USERS: User[] = [
-  { id: "0", name: "Duy Bảo", avatar: "👨🏻", color: "#3B82F6", border: "border-blue-500", bg: "bg-blue-100" },
-  { id: "1", name: "Linh Trang", avatar: "👩🏻", color: "#EC4899", border: "border-pink-500", bg: "bg-pink-100" },
-  { id: "2", name: "Đức Dân", avatar: "👨🏼", color: "#8B5CF6", border: "border-purple-500", bg: "bg-purple-100" },
-  { id: "3", name: "Phương Anh", avatar: "👩🏼", color: "#F97316", border: "border-orange-500", bg: "bg-orange-100" }
-];
+

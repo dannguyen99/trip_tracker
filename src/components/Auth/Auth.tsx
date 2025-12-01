@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useLanguage } from '../../contexts/LanguageContext';
 import authHero from '../../assets/auth_hero.png';
 import authPattern from '../../assets/auth_pattern.png';
 
 export function Auth() {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,7 +27,7 @@ export function Auth() {
           },
         });
         if (error) throw error;
-        alert('Check your email for the confirmation link!');
+        alert(t('auth.check_email'));
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -62,11 +64,11 @@ export function Auth() {
         />
         <div className="relative z-20 flex flex-col justify-end p-16 text-white h-full pb-24 animate-slide-up">
           <h1 className="text-5xl font-extrabold mb-6 leading-tight">
-            Plan your next<br />
-            <span className="text-sky-400">great adventure</span>
+            {t('auth.hero_title')}<br />
+            <span className="text-sky-400">{t('auth.hero_subtitle')}</span>
           </h1>
           <p className="text-xl text-slate-200 max-w-md leading-relaxed">
-            Join thousands of travelers managing their trips, expenses, and memories in one place.
+            {t('auth.hero_desc')}
           </p>
         </div>
       </div>
@@ -85,12 +87,12 @@ export function Auth() {
         <div className="w-full max-w-md space-y-8 bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-white/50 animate-slide-up">
           <div className="text-center lg:text-left">
             <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
-              {isSignUp ? 'Create an account' : 'Welcome back'}
+              {isSignUp ? t('auth.create_account') : t('auth.welcome_back')}
             </h2>
             <p className="mt-2 text-slate-500 font-medium">
               {isSignUp
-                ? 'Start planning your dream trip today.'
-                : 'Please enter your details to sign in.'}
+                ? t('auth.sign_up_desc')
+                : t('auth.sign_in_desc')}
             </p>
           </div>
 
@@ -98,7 +100,7 @@ export function Auth() {
             <div className="space-y-5">
               {isSignUp && (
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">{t('auth.full_name')}</label>
                   <input
                     type="text"
                     value={fullName}
@@ -111,7 +113,7 @@ export function Auth() {
               )}
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Email address</label>
+                <label className="block text-sm font-bold text-slate-700 mb-1">{t('auth.email')}</label>
                 <input
                   type="email"
                   value={email}
@@ -123,7 +125,7 @@ export function Auth() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Password</label>
+                <label className="block text-sm font-bold text-slate-700 mb-1">{t('auth.password')}</label>
                 <input
                   type="password"
                   value={password}
@@ -143,7 +145,7 @@ export function Auth() {
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                isSignUp ? 'Sign up' : 'Sign in'
+                isSignUp ? t('auth.sign_up') : t('auth.sign_in')
               )}
             </button>
           </form>
@@ -155,7 +157,7 @@ export function Auth() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white/50 text-slate-500 font-medium rounded-full">
-                  {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+                  {isSignUp ? t('auth.have_account') : t('auth.no_account')}
                 </span>
               </div>
             </div>
@@ -165,7 +167,7 @@ export function Auth() {
                 onClick={() => setIsSignUp(!isSignUp)}
                 className="text-sky-600 hover:text-sky-500 font-bold text-sm transition-colors hover:underline"
               >
-                {isSignUp ? 'Sign in instead' : 'Create an account'}
+                {isSignUp ? t('auth.sign_in_link') : t('auth.create_account_link')}
               </button>
             </div>
           </div>

@@ -20,8 +20,13 @@ import { getForecast, type WeatherData } from './services/weather';
 import { LanguageProvider } from './contexts/LanguageContext';
 
 import { useLanguage } from './contexts/LanguageContext';
+import { supabase } from './lib/supabase';
+
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Auth } from './components/Auth/Auth';
 
 function AppContent() {
+  const { user, loading: authLoading } = useAuth();
   const { t } = useLanguage();
   // Simple URL routing for now: ?trip_id=...
   const [tripId, setTripId] = useState<string | null>(null);
@@ -104,6 +109,18 @@ function AppContent() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Auth />;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -145,6 +162,9 @@ function AppContent() {
             <div className="absolute bottom-4 left-6">
               <h1 className="text-3xl font-extrabold text-slate-800">{t('hero.title')}</h1>
               <p className="text-slate-600 font-medium">{t('hero.subtitle')}</p>
+            </div>
+            <div className="absolute top-4 right-4">
+              <button onClick={() => supabase.auth.signOut()} className="bg-white/50 hover:bg-white/80 p-2 rounded-full text-xs font-bold transition">Sign Out</button>
             </div>
           </div>
 
@@ -364,7 +384,9 @@ function AppContent() {
 function App() {
   return (
     <LanguageProvider>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </LanguageProvider>
   );
 }

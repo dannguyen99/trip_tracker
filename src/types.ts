@@ -97,6 +97,7 @@ export interface TripData {
   restaurants: Restaurant[];
   activities: Activity[];
   packingItems: PackingItem[];
+  ownerId?: string;
 }
 
 export interface AppState {

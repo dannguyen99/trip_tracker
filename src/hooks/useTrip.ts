@@ -285,10 +285,18 @@ export const useTrip = (tripId: string | null) => {
   };
 
   const createTrip = async (name: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     // 1. Create Trip
     const { data: trip, error: tripError } = await supabase
       .from('trips')
-      .insert({ name, total_budget_vnd: 0, exchange_rate: 740 })
+      .insert({
+        name,
+        total_budget_vnd: 0,
+        exchange_rate: 740,
+        owner_id: user.id
+      })
       .select()
       .single();
 

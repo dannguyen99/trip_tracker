@@ -25,6 +25,7 @@ export const useAllTrips = () => {
           name,
           created_at,
           total_budget_vnd,
+          owner_id,
           trip_members (count)
         `)
         .order('created_at', { ascending: false });
@@ -36,6 +37,7 @@ export const useAllTrips = () => {
         name: t.name,
         created_at: t.created_at,
         total_budget_vnd: t.total_budget_vnd,
+        owner_id: t.owner_id,
         member_count: t.trip_members[0]?.count || 0
       }));
 

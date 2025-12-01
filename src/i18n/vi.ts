@@ -1,6 +1,47 @@
+
 import type { Dictionary } from './en';
 
 export const vi: Dictionary = {
+  packing: {
+    title: 'Danh sách đồ dùng',
+    items_count: '{{count}} món',
+    packed: 'Đã gói {{percent}}%',
+    import_city: 'Thành phố',
+    import_beach: 'Biển',
+    smart_add: 'Gợi ý nhanh',
+    ask_ai: 'Hỏi AI',
+    weather: 'Thời tiết',
+    progress: 'Tiến độ',
+    add_placeholder: 'Thêm vào {{category}}...',
+    empty_title: 'Túi của bạn đang trống',
+    empty_desc: 'Bắt đầu thêm đồ vào danh sách {{category}} hoặc dùng mẫu có sẵn!',
+    assign_to: 'GIAO CHO:',
+    none: 'Không',
+    show_label: 'Hiển thị:',
+    all: 'Tất cả',
+    my_items: 'Của tôi',
+    categories: {
+      All: 'Tất cả',
+      Essentials: 'Thiết yếu',
+      Clothing: 'Quần áo',
+      Toiletries: 'Vệ sinh',
+      Tech: 'Công nghệ',
+      Documents: 'Giấy tờ',
+      Misc: 'Khác'
+    },
+    ai: {
+      title: 'Trợ lý AI',
+      subtitle: 'Gợi ý thông minh',
+      analyzing: 'Đang phân tích chuyến đi của bạn...',
+      found_items: 'Tìm thấy {{count}} món bạn có thể cần:',
+      no_suggestions: 'Không tìm thấy gợi ý nào. Có vẻ bạn đã chuẩn bị đủ! 🎉',
+      cancel: 'Hủy',
+      add_items: 'Thêm {{count}} món',
+      error: 'Không thể tạo gợi ý. Vui lòng kiểm tra khóa API.'
+    },
+    clear_all: 'Xóa tất cả',
+    confirm_clear: 'Bạn có chắc chắn muốn xóa tất cả đồ dùng không?'
+  },
   common: {
     loading: 'Đang tải...',
     error: 'Lỗi',
@@ -29,6 +70,7 @@ export const vi: Dictionary = {
     hotels: 'Khách sạn',
     dining: 'Ăn uống',
     itinerary: 'Lịch trình',
+    packing: 'Đồ dùng',
   },
   hero: {
     title: 'Trip Tracker',
@@ -70,6 +112,15 @@ export const vi: Dictionary = {
     empty_history: 'Chuyến đi chưa có chi tiêu nào. Thêm ngay!',
     group_label: 'Nhóm',
     personal_label: 'Cá nhân',
+    paid_by_label: 'Người trả',
+    paid_to_label: 'Trả cho',
+    settlement_label: 'Quyết toán',
+    settlement_default_desc: 'Quyết toán',
+    split_label: 'Chia với',
+    split_everyone: 'Tất cả',
+    split_specific: 'Chọn người',
+    split_with_label: 'Chia với',
+    people_label: 'người',
     categories: {
       food: 'Ăn uống',
       transport: 'Di chuyển',
@@ -97,6 +148,9 @@ export const vi: Dictionary = {
     ref_label: 'Mã',
     new_stay: 'Khách sạn mới',
     add_stay: 'Thêm khách sạn',
+    hero_title: 'Đặt phòng khách sạn',
+    hero_subtitle: 'Quản lý nơi lưu trú',
+    price_per_night: 'Giá / Đêm',
   },
   dining: {
     hero_title: 'Hành trình Ẩm thực',

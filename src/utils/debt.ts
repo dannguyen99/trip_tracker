@@ -11,16 +11,34 @@ export const calculateDebts = (users: User[], expenses: Expense[]): Debt[] => {
   users.forEach(u => balances[u.id] = 0);
 
   expenses.forEach(exp => {
-    if (exp.type === 'SHARED') {
-      const splitAmount = exp.amountVND / users.length;
-      // Payer paid the full amount
-      balances[exp.payerId] = (balances[exp.payerId] || 0) + exp.amountVND;
-      // Everyone (including payer) consumes the split amount
-      users.forEach(u => {
-        balances[u.id] = (balances[u.id] || 0) - splitAmount;
-      });
+    if (exp.type === 'SETTLEMENT') {
+      // Direct payment from payerId to splitTo[0] (receiver)
+      // Payer's balance increases (they paid, so they are owed/less in debt)
+      // Receiver's balance decreases (they received, so they owe/less credit)
+      if (exp.splitTo && exp.splitTo.length > 0) {
+        const receiverId = exp.splitTo[0];
+        balances[exp.payerId] = (balances[exp.payerId] || 0) + exp.amountVND;
+        balances[receiverId] = (balances[receiverId] || 0) - exp.amountVND;
+      }
+    } else if (exp.type === 'SHARED') {
+      // Determine who is involved in the split
+      const splitUsers = exp.splitTo && exp.splitTo.length > 0
+        ? users.filter(u => exp.splitTo!.includes(u.id))
+        : users;
+
+      if (splitUsers.length > 0) {
+        const splitAmount = exp.amountVND / splitUsers.length;
+
+        // Payer paid the full amount
+        balances[exp.payerId] = (balances[exp.payerId] || 0) + exp.amountVND;
+
+        // Only split users consume the amount
+        splitUsers.forEach(u => {
+          balances[u.id] = (balances[u.id] || 0) - splitAmount;
+        });
+      }
     }
-    // PERSONAL expenses don't affect debt (assuming payer paid for themselves)
+    // PERSONAL expenses don't affect debt
   });
 
   const debtors: { id: string; amount: number }[] = [];

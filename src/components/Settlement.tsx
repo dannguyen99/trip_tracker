@@ -10,6 +10,8 @@ interface SettlementProps {
 
 import { useLanguage } from '../contexts/LanguageContext';
 
+import { Avatar } from './Avatar';
+
 export const Settlement: React.FC<SettlementProps> = ({ expenses, exchangeRate, users }) => {
   const { t } = useLanguage();
   const debts = calculateDebts(users, expenses);
@@ -40,15 +42,11 @@ export const Settlement: React.FC<SettlementProps> = ({ expenses, exchangeRate, 
               <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 relative overflow-hidden">
                 <div className="flex items-center gap-3 relative z-10">
                   <div className="flex flex-col items-center">
-                    <span className="text-xl">
-                      {fromUser.avatar.startsWith('data:') ? <img src={fromUser.avatar} className="w-6 h-6 rounded-full" /> : fromUser.avatar}
-                    </span>
+                    <Avatar avatar={fromUser.avatar} name={fromUser.name} size="sm" />
                   </div>
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">{t('expenses.pays_label')}</div>
                   <div className="flex flex-col items-center">
-                    <span className="text-xl">
-                      {toUser.avatar.startsWith('data:') ? <img src={toUser.avatar} className="w-6 h-6 rounded-full" /> : toUser.avatar}
-                    </span>
+                    <Avatar avatar={toUser.avatar} name={toUser.name} size="sm" />
                   </div>
                 </div>
                 <div className="text-right relative z-10">

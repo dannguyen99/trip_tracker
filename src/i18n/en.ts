@@ -1,4 +1,44 @@
 export const en = {
+  packing: {
+    title: 'Packing List',
+    items_count: '{{count}} items',
+    packed: '{{percent}}% packed',
+    import_city: 'City',
+    import_beach: 'Beach',
+    smart_add: 'Smart Add',
+    ask_ai: 'Ask AI',
+    weather: 'Weather',
+    progress: 'Progress',
+    add_placeholder: 'Add to {{category}}...',
+    empty_title: 'Your bag is empty',
+    empty_desc: 'Start adding items to your {{category}} list or use a template to get started!',
+    assign_to: 'ASSIGN TO:',
+    none: 'None',
+    show_label: 'Show:',
+    all: 'All',
+    my_items: 'My Items',
+    categories: {
+      All: 'All',
+      Essentials: 'Essentials',
+      Clothing: 'Clothing',
+      Toiletries: 'Toiletries',
+      Tech: 'Tech',
+      Documents: 'Documents',
+      Misc: 'Misc'
+    },
+    ai: {
+      title: 'AI Assistant',
+      subtitle: 'Smart Suggestions',
+      analyzing: 'Analyzing your trip details...',
+      found_items: 'I found {{count}} items you might need:',
+      no_suggestions: 'No suggestions found. You might be fully packed! 🎉',
+      cancel: 'Cancel',
+      add_items: 'Add {{count}} Items',
+      error: 'Failed to generate suggestions. Please check your API key.'
+    },
+    clear_all: 'Clear All',
+    confirm_clear: 'Are you sure you want to delete all items?'
+  },
   common: {
     loading: 'Loading...',
     error: 'Error',
@@ -27,6 +67,7 @@ export const en = {
     hotels: 'Hotels',
     dining: 'Dining',
     itinerary: 'Itinerary',
+    packing: 'Packing',
   },
   hero: {
     title: 'Trip Tracker',
@@ -68,6 +109,15 @@ export const en = {
     empty_history: 'Trip is empty. Add something!',
     group_label: 'Group',
     personal_label: 'Personal',
+    paid_by_label: 'Paid By',
+    paid_to_label: 'Paid To',
+    settlement_label: 'Settlement',
+    settlement_default_desc: 'Settlement',
+    split_label: 'Split With',
+    split_everyone: 'Everyone',
+    split_specific: 'Specific People',
+    split_with_label: 'Split with',
+    people_label: 'people',
     categories: {
       food: 'Food',
       transport: 'Taxi',
@@ -95,6 +145,9 @@ export const en = {
     ref_label: 'Ref',
     new_stay: 'New Stay',
     add_stay: 'Add Stay',
+    hero_title: 'Hotel Bookings',
+    hero_subtitle: 'Manage your stays',
+    price_per_night: 'Price / Night',
   },
   dining: {
     hero_title: 'Culinary Journey',

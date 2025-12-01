@@ -8,9 +8,10 @@ interface HotelListProps {
   onAdd: (hotel: Omit<Hotel, 'id' | 'created_at'>) => void;
   onDelete: (id: string) => void;
   tripId: string;
+  onAddExpense?: (expense: any) => void;
 }
 
-export const HotelList: React.FC<HotelListProps> = ({ hotels, onAdd, onDelete, tripId }) => {
+export const HotelList: React.FC<HotelListProps> = ({ hotels, onAdd, onDelete, tripId, onAddExpense }) => {
   const { t } = useLanguage();
   const [isAdding, setIsAdding] = useState(false);
   const [newHotel, setNewHotel] = useState<Partial<Hotel>>({
@@ -21,6 +22,7 @@ export const HotelList: React.FC<HotelListProps> = ({ hotels, onAdd, onDelete, t
     checkOut: '',
     bookingRef: ''
   });
+  const [trackExpense, setTrackExpense] = useState(true);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +37,24 @@ export const HotelList: React.FC<HotelListProps> = ({ hotels, onAdd, onDelete, t
       checkOut: newHotel.checkOut || '',
       bookingRef: newHotel.bookingRef || ''
     });
+
+    if (trackExpense && onAddExpense && newHotel.price > 0) {
+      onAddExpense({
+        id: Date.now().toString(),
+        description: `Hotel: ${newHotel.name}`,
+        amountVND: Number(newHotel.price), // Assuming price is in VND for now, or handle currency
+        originalAmount: Number(newHotel.price),
+        currency: 'VND', // Default to VND for simplicity or add currency selector
+        payerId: "1", // Hardcoded for now, ideally we pass users prop
+        type: 'SHARED',
+        category: 'Hotel',
+        date: new Date().toISOString()
+      });
+    }
+
     setIsAdding(false);
     setNewHotel({ name: '', address: '', price: 0, checkIn: '', checkOut: '', bookingRef: '' });
+    setTrackExpense(true);
   };
 
   return (
@@ -118,6 +136,17 @@ export const HotelList: React.FC<HotelListProps> = ({ hotels, onAdd, onDelete, t
               value={newHotel.bookingRef}
               onChange={e => setNewHotel({ ...newHotel, bookingRef: e.target.value })}
             />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="trackExpense"
+              checked={trackExpense}
+              onChange={e => setTrackExpense(e.target.checked)}
+              className="w-5 h-5 rounded text-sky-500 focus:ring-sky-500"
+            />
+            <label htmlFor="trackExpense" className="text-sm font-bold text-slate-600">Track as Expense (Paid by you)</label>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

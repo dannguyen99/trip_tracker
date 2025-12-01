@@ -1,5 +1,5 @@
 export type Currency = 'VND' | 'THB' | 'USD';
-export type ExpenseType = 'SHARED' | 'PERSONAL';
+export type ExpenseType = 'SHARED' | 'PERSONAL' | 'SETTLEMENT';
 export type Category = 'Food' | 'Transport' | 'Hotel' | 'Fun' | 'Misc' | 'Shopping' | 'Nightlife' | 'Massage' | 'Tours';
 
 export interface User {
@@ -21,6 +21,7 @@ export interface Expense {
   description: string;
   category: Category;
   date: string;
+  splitTo?: string[]; // IDs of users involved in the split. undefined/null means everyone.
 }
 
 export interface Hotel {
@@ -80,6 +81,7 @@ export interface PackingItem {
   name: string;
   category: string;
   isChecked: boolean;
+  assignedTo?: string; // ID of the trip member
 }
 
 export interface TripData {

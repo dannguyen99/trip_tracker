@@ -1,4 +1,3 @@
-import React from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import type { Expense, User } from '../types';
@@ -53,6 +52,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ expenses, users }) => {
       borderRadius: 4,
     }]
   };
+
+
 
   const options = {
     responsive: true,

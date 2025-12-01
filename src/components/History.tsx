@@ -32,6 +32,8 @@ const CAT_COLORS: Record<string, string> = {
 
 import { useLanguage } from '../contexts/LanguageContext';
 
+import { Avatar } from './Avatar';
+
 export const History: React.FC<HistoryProps> = ({ expenses, onDelete, users }) => {
   const { t } = useLanguage();
   const formatMoney = (amount: number) => {
@@ -78,18 +80,32 @@ export const History: React.FC<HistoryProps> = ({ expenses, onDelete, users }) =
             const user = users.find(u => u.id === exp.payerId);
             if (!user) return null;
             const isTHB = exp.currency === 'THB';
-            const iconClass = CAT_ICONS[exp.category] || 'ph-circle';
-            const color = CAT_COLORS[exp.category];
+
+            // Determine Icon and Color based on Type/Category
+            let iconClass = CAT_ICONS[exp.category] || 'ph-circle';
+            let color = CAT_COLORS[exp.category];
+            let typeLabel = exp.type === 'SHARED' ? t('expenses.group_label') : t('expenses.personal_label');
+
+            if (exp.type === 'SETTLEMENT') {
+              iconClass = 'ph-hand-coins';
+              color = '#10B981'; // Emerald
+              typeLabel = t('expenses.settlement_label') || 'Settlement';
+            }
+
+            // Determine Subtitle (Split details)
+            let subtitle = `${typeLabel} • ${t(`expenses.categories.${exp.category.toLowerCase()}` as any) || exp.category}`;
+            if (exp.type === 'SETTLEMENT' && exp.splitTo && exp.splitTo.length > 0) {
+              const receiver = users.find(u => u.id === exp.splitTo![0]);
+              subtitle = `${t('expenses.paid_to_label') || 'Paid to'} ${receiver?.name || 'Unknown'}`;
+            } else if (exp.type === 'SHARED' && exp.splitTo && exp.splitTo.length > 0) {
+              subtitle = `${t('expenses.split_with_label') || 'Split with'} ${exp.splitTo.length} ${t('expenses.people_label') || 'people'}`;
+            }
 
             return (
               <div key={exp.id} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0 group">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-slate-50 border border-slate-100 shadow-sm relative">
-                    {user.avatar.startsWith('data:') ? (
-                      <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                      user.avatar
-                    )}
+                  <div className="relative">
+                    <Avatar avatar={user.avatar} name={user.name} size="md" />
                     <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
                       <i className={`ph-fill ${iconClass} text-xs`} style={{ color }}></i>
                     </div>
@@ -97,7 +113,7 @@ export const History: React.FC<HistoryProps> = ({ expenses, onDelete, users }) =
                   <div>
                     <div className="font-bold text-slate-700 text-sm leading-tight">{exp.description}</div>
                     <div className="text-[10px] text-slate-400 mt-0.5 font-medium uppercase tracking-wide">
-                      {exp.type === 'SHARED' ? t('expenses.group_label') : t('expenses.personal_label')} • {t(`expenses.categories.${exp.category.toLowerCase()}` as any) || exp.category}
+                      {subtitle}
                     </div>
                   </div>
                 </div>

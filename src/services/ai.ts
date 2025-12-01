@@ -1,57 +1,55 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { Restaurant, Activity } from '../types';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { TripData, PackingItem } from "../types";
 
-// Initialize Gemini API
-// Note: In a real production app, you should use a backend proxy to hide your API key.
-// For this demo/prototype, we'll use the client-side key from .env.
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-let genAI: GoogleGenerativeAI | null = null;
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(API_KEY || "");
 
-if (API_KEY) {
-  genAI = new GoogleGenerativeAI(API_KEY);
+export interface AISuggestion {
+  name: string;
+  category: string;
+  reason: string;
 }
 
-export const isAIEnabled = () => !!API_KEY;
-
-export const generateRestaurantRecommendations = async (
-  location: string,
-  preferences: string = ''
-): Promise<Partial<Restaurant>[]> => {
-  if (!genAI) {
-    console.warn('Gemini API Key is missing. Please add VITE_GEMINI_API_KEY to your .env file.');
-    return [];
+export const generatePackingSuggestions = async (
+  trip: TripData,
+  existingItems: PackingItem[],
+  language: 'en' | 'vi' = 'en'
+): Promise<AISuggestion[]> => {
+  if (!API_KEY) {
+    console.error("Gemini API Key is missing");
+    throw new Error("Gemini API Key is missing");
   }
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-09-2025" });
+
+  const existingNames = existingItems.map(i => i.name).join(", ");
 
   const prompt = `
-    You are a local culinary expert and concierge.
-    Recommend 5 top-rated restaurants in ${location}.
+    You are a helpful travel packing assistant.
     
-    User Preferences: ${preferences || 'Mix of local gems and popular spots'}
-
-    Return the response ONLY as a valid JSON array of objects. Do not include markdown formatting or backticks.
-    Each object should have the following fields:
-    - name (string)
-    - cuisine (string)
-    - priceRange (string, e.g., "$", "$$", "$$$")
-    - rating (number, 0-5, be realistic based on public perception)
-    - location (string, short address or area)
-    - description (string, short punchy description, max 2 sentences)
-    - category (string, e.g., "Casual", "Fine Dining", "Street Food", "Cafe", "Bar")
+    Trip Details:
+    - Destination: ${trip.hotels[0]?.address || "Unknown"}
+    - Start Date: ${trip.startDate || "Unknown"}
+    - End Date: ${trip.endDate || "Unknown"}
+    - Activities: ${trip.activities.map(a => a.name).join(", ")}
     
-    Example format:
+    Existing Items (DO NOT Suggest these): ${existingNames}
+    
+    Task:
+    Suggest 5-10 essential packing items that are missing from the list, specifically tailored to the destination, weather (infer from date/location), and activities.
+    
+    IMPORTANT: Respond in ${language === 'vi' ? 'Vietnamese' : 'English'}.
+    
+    Return ONLY a valid JSON array with objects containing:
+    - name: string (item name in ${language === 'vi' ? 'Vietnamese' : 'English'})
+    - category: string (one of: Essentials, Clothing, Toiletries, Tech, Documents, Misc)
+    - reason: string (short explanation why it's needed in ${language === 'vi' ? 'Vietnamese' : 'English'})
+    
+    Example JSON:
     [
-      {
-        "name": "Example Resto",
-        "cuisine": "Italian",
-        "priceRange": "$$",
-        "rating": 4.5,
-        "location": "Downtown",
-        "description": "Amazing pasta.",
-        "category": "Casual"
-      }
+      { "name": "${language === 'vi' ? 'Giày leo núi' : 'Hiking Boots'}", "category": "Clothing", "reason": "${language === 'vi' ? 'Cần thiết cho hoạt động leo núi' : 'Required for Mountain Trek activity'}" }
     ]
   `;
 
@@ -60,73 +58,60 @@ export const generateRestaurantRecommendations = async (
     const response = await result.response;
     const text = response.text();
 
-    // Clean up the text if it contains markdown code blocks
-    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    // Clean up markdown code blocks if present
+    const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
 
-    const recommendations = JSON.parse(jsonStr);
-    return recommendations;
+    const suggestions: AISuggestion[] = JSON.parse(jsonString);
+    return suggestions;
   } catch (error) {
-    console.error('Error generating recommendations:', error);
-    return [];
+    console.error("Error generating packing suggestions:", error);
+    throw error;
   }
 };
 
-export const generateItinerary = async (
-  location: string,
-  date: string,
-  preferences: string = ''
-): Promise<Partial<Activity>[]> => {
-  if (!genAI) {
-    console.warn('Gemini API Key is missing.');
-    return [];
-  }
+// --- Restaurant AI Features ---
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+export const isAIEnabled = () => !!API_KEY;
+
+export interface AIRestaurantSuggestion {
+  name: string;
+  cuisine: string;
+  reason: string;
+  location: string;
+}
+
+export const generateRestaurantRecommendations = async (
+  location: string,
+  preferences: string
+): Promise<AIRestaurantSuggestion[]> => {
+  if (!API_KEY) throw new Error("Gemini API Key is missing");
+
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-09-2025" });
 
   const prompt = `
-    You are a professional travel planner.
-    Create a 1-day itinerary for ${location} on ${date}.
+    You are a local food guide.
     
-    User Preferences: ${preferences || 'Balanced mix of sightseeing, food, and relaxation'}
-
-    Return the response ONLY as a valid JSON array of objects. Do not include markdown formatting or backticks.
-    Each object should have the following fields:
-    - name (string, name of the place or activity)
-    - description (string, short description)
-    - location (string, address or area)
-    - startTime (string, ISO 8601 datetime string for ${date}, e.g., "2023-12-25T09:00:00")
-    - endTime (string, ISO 8601 datetime string for ${date}, e.g., "2023-12-25T10:30:00")
-    - type (string, one of: "food", "activity", "travel", "hotel", "other")
-    - notes (string, optional tips)
+    Location: ${location}
+    Preferences: ${preferences}
     
-    Ensure the times are logical and sequential for a single day.
+    Task:
+    Suggest 3-5 must-try restaurants or street food spots matching the location and preferences.
     
-    Example format:
-    [
-      {
-        "name": "Morning Coffee at The Commons",
-        "description": "Start the day with artisan coffee.",
-        "location": "Thong Lo",
-        "startTime": "2023-12-25T09:00:00",
-        "endTime": "2023-12-25T10:00:00",
-        "type": "food",
-        "notes": "Try the cold brew."
-      }
-    ]
+    Return ONLY a valid JSON array with objects containing:
+    - name: string
+    - cuisine: string
+    - reason: string (why it's good)
+    - location: string (approximate area)
   `;
 
   try {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-
-    // Clean up the text if it contains markdown code blocks
-    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-
-    const activities = JSON.parse(jsonStr);
-    return activities;
+    const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    return JSON.parse(jsonString);
   } catch (error) {
-    console.error('Error generating itinerary:', error);
-    return [];
+    console.error("Error generating restaurant suggestions:", error);
+    throw error;
   }
 };

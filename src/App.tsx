@@ -66,7 +66,9 @@ function AppContent() {
     deleteActivity,
     addPackingItem,
     updatePackingItem,
-    deletePackingItem
+    deletePackingItem,
+    clearPackingItems,
+
   } = useTrip(tripId);
 
   const [isSetupOpen, setIsSetupOpen] = useState(false);
@@ -311,6 +313,7 @@ function AppContent() {
             onAdd={addHotel}
             onDelete={deleteHotel}
             tripId={trip.id}
+            onAddExpense={addExpense}
           />
         )}
 
@@ -335,16 +338,20 @@ function AppContent() {
             startDate={trip.startDate}
             endDate={trip.endDate}
             onOpenSetup={() => setIsSetupOpen(true)}
+            onAddExpense={addExpense}
           />
         )}
 
         {activeTab === 'packing' && (
           <PackingList
             items={trip.packingItems || []}
+            users={trip.users}
             onAdd={addPackingItem}
             onUpdate={updatePackingItem}
             onDelete={deletePackingItem}
-            tripId={trip.id}
+            onClearAll={() => clearPackingItems(tripId!)}
+            tripId={tripId!}
+            tripData={trip}
             weatherForecast={weatherForecast}
           />
         )}

@@ -8,14 +8,17 @@ interface ActivityModalProps {
   initialActivity?: Activity;
   tripId: string;
   defaultDate?: Date;
+  onAddExpense?: (expense: any) => void;
 }
 
-export const ActivityModal: React.FC<ActivityModalProps> = ({ isOpen, onClose, onSave, initialActivity, tripId, defaultDate }) => {
+export const ActivityModal: React.FC<ActivityModalProps> = ({ isOpen, onClose, onSave, initialActivity, tripId, defaultDate, onAddExpense }) => {
   const [formData, setFormData] = useState<Partial<Activity>>({
     type: 'activity',
     status: 'planned',
     tagColor: 'blue'
   });
+  const [addToExpense, setAddToExpense] = useState(false);
+  const [cost, setCost] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -29,6 +32,8 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({ isOpen, onClose, o
           startTime: defaultDate ? defaultDate.toISOString() : new Date().toISOString(),
           tagColor: 'blue'
         });
+        setAddToExpense(false);
+        setCost('');
       }
     }
   }, [isOpen, initialActivity, tripId, defaultDate]);
@@ -38,6 +43,20 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({ isOpen, onClose, o
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData as Omit<Activity, 'id' | 'created_at'>);
+
+    if (addToExpense && onAddExpense && cost) {
+      onAddExpense({
+        id: Date.now().toString(),
+        description: formData.name || 'Activity',
+        amountVND: Number(cost),
+        originalAmount: Number(cost),
+        currency: 'VND',
+        payerId: "1", // Default to first user again, ideally passed in
+        type: 'SHARED',
+        category: 'Activity',
+        date: formData.startTime || new Date().toISOString()
+      });
+    }
     onClose();
   };
 
@@ -194,6 +213,36 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({ isOpen, onClose, o
                 <option value="yellow">Yellow</option>
               </select>
             </div>
+          </div>
+
+          {/* Cost & Expense */}
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="addExpense"
+                  checked={addToExpense}
+                  onChange={e => setAddToExpense(e.target.checked)}
+                  className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="addExpense" className="font-bold text-slate-700 text-sm">Add to Expenses</label>
+              </div>
+            </div>
+
+            {addToExpense && (
+              <div className="animate-fade-in">
+                <label className="block text-xs font-bold text-slate-400 mb-1 uppercase">Cost (VND)</label>
+                <input
+                  type="number"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. 500000"
+                  value={cost}
+                  onChange={e => setCost(e.target.value)}
+                />
+                <p className="text-[10px] text-slate-400 mt-1">* Will be added as a Shared expense paid by you</p>
+              </div>
+            )}
           </div>
 
           <div>

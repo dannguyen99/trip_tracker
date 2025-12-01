@@ -16,9 +16,10 @@ interface ItineraryProps {
   startDate?: string | null;
   endDate?: string | null;
   onOpenSetup: () => void;
+  onAddExpense?: (expense: any) => void;
 }
 
-export const Itinerary: React.FC<ItineraryProps> = ({ activities, onAdd, onUpdate, onDelete, tripId, startDate, endDate, onOpenSetup }) => {
+export const Itinerary: React.FC<ItineraryProps> = ({ activities, onAdd, onUpdate, onDelete, tripId, startDate, endDate, onOpenSetup, onAddExpense }) => {
   const { t } = useLanguage();
   const [activeDay, setActiveDay] = useState<string>('day1');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -312,6 +313,7 @@ export const Itinerary: React.FC<ItineraryProps> = ({ activities, onAdd, onUpdat
         initialActivity={editingActivity}
         tripId={tripId}
         defaultDate={modalDefaultDate}
+        onAddExpense={onAddExpense}
       />
     </div>
   );

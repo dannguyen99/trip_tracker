@@ -45,11 +45,14 @@ export const Header: React.FC<HeaderProps> = ({ data, onOpenSetup, onManageUsers
               <i className="ph-bold ph-users"></i>
             </button>
 
-            <div onClick={onOpenSetup} className="cursor-pointer group text-left ml-2">
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-none">{data.name}</h1>
-              <div className="flex items-center gap-2 text-xs font-medium text-sky-200/80 group-hover:text-white transition">
-                <i className="ph ph-currency-circle-dollar text-lg"></i>
-                <span>1 THB ≈ {Math.round(data.exchangeRate)} VND</span>
+            <div onClick={onOpenSetup} className="cursor-pointer group text-left ml-2 flex items-center gap-3">
+              <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Journey Logo" className="w-10 h-10 rounded-xl shadow-lg" />
+              <div>
+                <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-none">{data.name}</h1>
+                <div className="flex items-center gap-2 text-xs font-medium text-sky-200/80 group-hover:text-white transition">
+                  <i className="ph ph-currency-circle-dollar text-lg"></i>
+                  <span>1 THB ≈ {Math.round(data.exchangeRate)} VND</span>
+                </div>
               </div>
             </div>
           </div>

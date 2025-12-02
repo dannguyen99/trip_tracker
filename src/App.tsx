@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { UserProfile } from './components/Profile/UserProfile';
+import { JoinTrip } from './components/JoinTrip'; // Added import for JoinTrip
 import { useTrip } from './hooks/useTrip';
 import { useAllTrips } from './hooks/useAllTrips';
 import heroImage from './assets/landing_hero.png';
@@ -300,6 +301,7 @@ function AppContent() {
       <UserManagement
         isOpen={isUserMgmtOpen}
         onClose={() => setIsUserMgmtOpen(false)}
+        tripId={trip.id}
         users={trip.users}
         onAddUser={addMember}
         onEditUser={updateMember}
@@ -415,11 +417,12 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
+    <Router basename={import.meta.env.BASE_URL}>
       <LanguageProvider>
         <AuthProvider>
           <Routes>
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/join/:token" element={<JoinTrip />} /> {/* Added JoinTrip route */}
             <Route path="/*" element={<AppContent />} />
           </Routes>
         </AuthProvider>

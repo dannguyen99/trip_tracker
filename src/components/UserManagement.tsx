@@ -2,8 +2,10 @@ import React, { useState, useRef } from 'react';
 import type { User } from '../types';
 import { resizeImage } from '../utils/imageUtils';
 import { useLanguage } from '../contexts/LanguageContext';
+import { supabase } from '../lib/supabase';
 
 interface UserManagementProps {
+  tripId: string;
   users: User[];
   onAddUser: (name: string, avatar: string) => void;
   onEditUser: (id: string, name: string, avatar: string) => void;
@@ -14,12 +16,55 @@ interface UserManagementProps {
 
 const AVATAR_OPTIONS = ["👨🏻", "👩🏻", "👨🏼", "👩🏼", "🧑🏽", "👱🏻‍♂️", "👴🏻", "👵🏻", "🦁", "🐯", "🐶", "🐱"];
 
-export const UserManagement: React.FC<UserManagementProps> = ({ users, onAddUser, onEditUser, onDeleteUser, isOpen, onClose }) => {
+export const UserManagement: React.FC<UserManagementProps> = ({ tripId, users, onAddUser, onEditUser, onDeleteUser, isOpen, onClose }) => {
   const { t } = useLanguage();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState(AVATAR_OPTIONS[0]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [generatingLink, setGeneratingLink] = useState(false);
+
+  const handleGenerateLink = async () => {
+    setGeneratingLink(true);
+    try {
+      // Check if invite exists
+      const { data: existing } = await supabase
+        .from('trip_invites')
+        .select('token')
+        .eq('trip_id', tripId)
+        .single();
+
+      let token = existing?.token;
+
+      if (!token) {
+        // Create new invite
+        // We can't use default gen_random_bytes in client insert if we want to get it back immediately easily without return, 
+        // but the table has defaults.
+        // Let's insert and select.
+        const { data: newInvite, error } = await supabase
+          .from('trip_invites')
+          .insert({ trip_id: tripId })
+          .select('token')
+          .single();
+
+        if (error) throw error;
+        token = newInvite.token;
+      }
+
+      // Construct link using BASE_URL to handle subpaths (e.g. /trip_tracker/)
+      const baseUrl = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+      const link = `${window.location.origin}${baseUrl}join/${token}`;
+      setInviteLink(link);
+      navigator.clipboard.writeText(link);
+      alert('Invite link copied to clipboard!');
+    } catch (err) {
+      console.error('Error generating link:', err);
+      alert('Failed to generate invite link.');
+    } finally {
+      setGeneratingLink(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +113,21 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, onAddUser
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-slate-800">{t('user_management.title')}</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">✕</button>
+        </div>
+
+        {/* Invite Link Section */}
+        <div className="mb-6 bg-purple-50 p-4 rounded-2xl border border-purple-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-purple-900">Invite via Link</h3>
+            <p className="text-xs text-purple-600">Share a link to let friends join instantly.</p>
+          </div>
+          <button
+            onClick={handleGenerateLink}
+            disabled={generatingLink}
+            className="px-4 py-2 bg-purple-600 text-white rounded-xl font-bold text-sm hover:bg-purple-700 transition shadow-lg shadow-purple-600/20 disabled:opacity-50"
+          >
+            {generatingLink ? 'Generating...' : (inviteLink ? 'Copy Again' : 'Copy Link')}
+          </button>
         </div>
 
         {/* User List */}

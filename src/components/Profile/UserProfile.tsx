@@ -282,7 +282,7 @@ export function UserProfile() {
                     <label className="block text-sm font-medium text-slate-600 mb-1">{t('profile.email')}</label>
                     <input
                       type="text"
-                      value={user?.email}
+                      value={user?.email || ''}
                       disabled
                       className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed"
                     />

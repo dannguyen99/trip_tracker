@@ -40,7 +40,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      // Ignore "Auth session missing" error as we are signing out anyway
+      if (error.message !== 'Auth session missing!') {
+        console.error('Error signing out:', error);
+      }
+    }
+    // Always force clear session locally
+    setSession(null);
+    setUser(null);
+    // Optional: Clear any persisted tokens if Supabase client didn't
+    localStorage.removeItem('sb-mshalmlagmjuvtjzducu-auth-token');
   };
 
   return (

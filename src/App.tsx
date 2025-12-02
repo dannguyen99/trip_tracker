@@ -132,7 +132,10 @@ function AppContent() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
+        <div className="flex flex-col items-center gap-4">
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Loading..." className="w-16 h-16 rounded-2xl animate-pulse shadow-xl" />
+          <div className="text-slate-400 font-medium text-sm tracking-widest uppercase">Loading Journey...</div>
+        </div>
       </div>
     );
   }
@@ -147,7 +150,10 @@ function AppContent() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
+        <div className="flex flex-col items-center gap-4">
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Loading..." className="w-16 h-16 rounded-2xl animate-pulse shadow-xl" />
+          <div className="text-slate-400 font-medium text-sm tracking-widest uppercase">Loading Journey...</div>
+        </div>
       </div>
     );
   }
@@ -185,7 +191,13 @@ function AppContent() {
             <img src={heroImage} alt="Travel" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/90"></div>
             <div className="absolute bottom-4 left-6">
-              <h1 className="text-3xl font-extrabold text-slate-800">{t('hero.title')}</h1>
+              <div className="flex items-center gap-4 mb-2">
+                <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Journey Logo" className="w-16 h-16 rounded-2xl shadow-lg border-2 border-white/50" />
+                <div>
+                  <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight">Journey</h1>
+                  <div className="text-sky-600 font-bold text-sm uppercase tracking-wider">Travel Companion</div>
+                </div>
+              </div>
               <p className="text-slate-600 font-medium">{t('hero.subtitle')}</p>
             </div>
             <div className="absolute top-4 right-4 flex gap-2">

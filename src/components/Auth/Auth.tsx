@@ -63,8 +63,11 @@ export function Auth() {
           className="absolute inset-0 w-full h-full object-cover opacity-90 animate-fade-in"
         />
         <div className="relative z-20 flex flex-col justify-end p-16 text-white h-full pb-24 animate-slide-up">
+          <div className="mb-6">
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Journey Logo" className="w-20 h-20 rounded-2xl shadow-2xl" />
+          </div>
           <h1 className="text-5xl font-extrabold mb-6 leading-tight">
-            {t('auth.hero_title')}<br />
+            Journey<br />
             <span className="text-sky-400">{t('auth.hero_subtitle')}</span>
           </h1>
           <p className="text-xl text-slate-200 max-w-md leading-relaxed">
@@ -86,6 +89,9 @@ export function Auth() {
       >
         <div className="w-full max-w-md space-y-8 bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-white/50 animate-slide-up">
           <div className="text-center lg:text-left">
+            <div className="flex justify-center lg:justify-start mb-6">
+              <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Journey Logo" className="w-12 h-12 rounded-xl shadow-lg" />
+            </div>
             <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
               {isSignUp ? t('auth.create_account') : t('auth.welcome_back')}
             </h2>

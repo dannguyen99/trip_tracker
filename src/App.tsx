@@ -12,6 +12,7 @@ import { ExpenseForm } from './components/ExpenseForm';
 import { Dashboard } from './components/Dashboard';
 import { Settlement } from './components/Settlement';
 import { History } from './components/History';
+import { ExpenseAnalytics } from './components/ExpenseAnalytics';
 import { UserManagement } from './components/UserManagement';
 import { Tabs } from './components/Tabs';
 import { HotelList } from './components/HotelList';
@@ -356,6 +357,8 @@ function AppContent() {
             />
 
             <Dashboard expenses={trip.expenses} users={trip.users} />
+
+            <ExpenseAnalytics expenses={trip.expenses} exchangeRate={trip.exchangeRate} />
 
             <Settlement
               expenses={trip.expenses}
